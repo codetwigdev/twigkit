@@ -1,0 +1,43 @@
+export default {
+  slug: 'reading-a-jwt-without-panic',
+  title: 'Reading a JWT without panic',
+  summary: 'Three dot-separated parts, what each one holds, and what decoding does not prove.',
+  date: '2026-10-30',
+  tags: ['auth', 'jwt'],
+  tool: 'jwt-decoder',
+  blocks: [
+    { type: 'p', text: 'By the end of this article, you will understand the three parts of a JSON Web Token (JWT), what each part contains, and why decoding a token is not the same as verifying it.' },
+    { type: 'p', text: 'A JWT is a compact way to transmit claims between parties. It is made up of three sections separated by dots: the header, the payload, and the signature. You will often see it written as `header.payload.signature`.' },
+    { type: 'h2', text: 'The three parts' },
+    { type: 'p', text: 'The header and the payload are both JSON objects. They are encoded using base64url, which is the URL-safe variant of Base64. The signature is raw bytes, also encoded as base64url. Because the header and payload are just encoded JSON, they are easy to read. They are not encrypted.' },
+    { type: 'code', lang: 'text', text: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' },
+    { type: 'p', text: 'A well-known example token from the JWT debugger has the header `{"alg":"HS256","typ":"JWT"}` and the payload `{"sub":"1234567890","name":"John Doe","iat":1516239022}`. The `iat` claim stands for "issued at" and is measured in seconds since 1970-01-01 UTC. In this case, the value corresponds to 2018-01-18T01:30:22Z.' },
+    { type: 'h2', text: 'Registered claims' },
+    { type: 'p', text: 'The payload can contain any JSON, but there are registered claims that have standard meanings. Knowing these helps you understand what a token is trying to say.' },
+    { type: 'ul', items: [
+      '`iss` (issuer): who issued the token.',
+      '`sub` (subject): the subject of the token, often a user ID.',
+      '`aud` (audience): the intended recipient.',
+      '`exp` (expiry): the time after which the token should not be accepted.',
+      '`nbf` (not before): the time before which the token should not be accepted.',
+      '`iat` (issued at): the time the token was issued.',
+      '`jti` (token id): a unique identifier for the token.',
+    ]},
+    { type: 'p', text: 'Note that `exp`, `nbf`, and `iat` are in seconds since the Unix epoch, not milliseconds. Mixing up seconds and milliseconds is a common source of bugs when validating tokens.' },
+    { type: 'h2', text: 'Decoding is not verifying' },
+    { type: 'p', text: 'This is the most important point: decoding a token does not prove it is authentic. Anyone can read the header and payload because they are not encrypted. The signature is what prevents tampering, but checking the signature requires the shared secret (for symmetric algorithms like HS256) or the public key (for asymmetric algorithms).' },
+    { type: 'p', text: 'For HS256, the signature is an HMAC-SHA256 of the `header.payload` string, computed using a shared secret. If you do not have that secret, you cannot verify the signature. Therefore, you should never put secrets in the payload, because anyone who receives the token can read them.' },
+    { type: 'callout', title: 'Remember', text: 'A decoded token tells you what it claims, not whether to believe it.' },
+    { type: 'h2', text: 'What a server must check' },
+    { type: 'p', text: 'When a server receives a JWT, it must do more than just decode it. It needs to verify the signature using the correct key. It also needs to check the claims. Do not trust the `alg` header blindly; the historic `alg: none` problem shows why. The server should verify `exp` to ensure the token is not expired, `aud` to ensure it is intended for this service, and `iss` to ensure it came from a trusted issuer.' },
+    { type: 'p', text: 'Prefer short-lived tokens. If a token is stolen, a short expiry limits the window of abuse.' },
+    { type: 'h2', text: 'Decoding in Node.js' },
+    { type: 'p', text: 'If you are working in Node.js, you can decode a part of the token using the Buffer API. Here is a short snippet that decodes the payload of a JWT:' },
+    { type: 'code', lang: 'js', text: `const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+const parts = token.split('.');
+const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+console.log(payload);` },
+    { type: 'p', text: 'This gives you the JSON object from the payload. Remember, though, that this only decodes the data. It does not verify that the token is genuine. For verification, use a library that handles the cryptographic checks for you.' },
+    { type: 'p', text: 'When you need to inspect a JWT quickly, the [JWT Decoder](#/jwt-decoder) tool can help you see the header and payload without writing code. It is a useful first step before you move on to verification.' },
+  ],
+}
