@@ -5,5 +5,6 @@ export default {
   name: "HTML Entities",
   description: "Escape and unescape HTML special characters.",
   icon: "&;",
+  category: 'encode',
   component: lazy(() => import('./Tool.jsx')),
 }

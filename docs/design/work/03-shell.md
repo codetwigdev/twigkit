@@ -2,34 +2,105 @@
 files:
   - src/App.jsx
   - src/shell/useRoute.js
+  - src/catalog.js
   - src/shell/Workspace.jsx
   - src/shell/Workspace.css
 ---
 
-# 03 — App shell, router and tool workspace
+# 03 — App shell, router, catalog and tool workspace
 
-You own the router and the tool page (the "workspace"): the chrome around every tool. On
-desktop it is a 248px left rail listing the nine tools as a numbered index, with the tool
-in a calm, generous content column. Below 900px the rail becomes a sticky top bar with a
-horizontally scrolling strip of tool chips.
+> Changed in v1.1: routes for articles, the new `src/catalog.js` (categories and index
+> numbers), the rail moved out to package 15 (`Rail.jsx`), a "related article" block on
+> the tool page, and the eyebrow now names the category.
 
-Other packages provide: `Home` (`src/pages/Home.jsx`), `About` (`src/pages/About.jsx`),
-`Brand`, `ToolTile`, `ThemeToggle` (`src/ui/chrome/*.jsx`), and the global CSS. Import
-them by the paths below even if they do not exist yet in your checkout.
+You own the router, the catalog (the one place that knows about tool categories and index
+numbers), the `App` component and the tool page ("workspace"): the chrome around every
+tool. The rail on the left and the mobile chip strip are a separate component, `Rail`,
+written by another package; you render it.
 
-## File 1: `src/shell/useRoute.js`
+Other packages provide: `Home`, `About`, `Articles`, `Article` (`src/pages/*.jsx`),
+`Rail` (`src/shell/Rail.jsx`), the articles registry (`src/articles/registry.js`) and the
+global CSS. Import them by the paths below even if they do not exist yet in your checkout.
+
+## File 1: `src/catalog.js`
+
+```js
+import { tools } from './registry.js'
+
+// Display order of the categories. A tool's index number (01, 02, …) is its position
+// in `ordered`: category order first, then name. Numbers are global, never per category.
+export const CATEGORIES = [
+  { id: 'encode', name: 'Encode & decode', blurb: 'Base64, entities, tokens and hashes.' },
+  { id: 'data', name: 'Data', blurb: 'JSON, CSV and URLs, taken apart and put back.' },
+  { id: 'text', name: 'Text', blurb: 'Count, compare, sort, slug and match.' },
+  { id: 'numbers', name: 'Numbers & time', blurb: 'Bases, timestamps and schedules.' },
+  { id: 'pick', name: 'Colour & random', blurb: 'Pick a colour or ask for an ID.' },
+]
+
+const OTHER = { id: 'other', name: 'Other', blurb: '' }
+
+export function categoryOf(tool) {
+  return CATEGORIES.find((c) => c.id === tool.category) || OTHER
+}
+
+function rank(tool) {
+  const i = CATEGORIES.findIndex((c) => c.id === tool.category)
+  return i === -1 ? CATEGORIES.length : i
+}
+
+export const ordered = [...tools].sort(
+  (a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name),
+)
+
+export const groups = [...CATEGORIES, OTHER]
+  .map((category) => ({
+    category,
+    tools: ordered.filter((t) => categoryOf(t).id === category.id),
+  }))
+  .filter((g) => g.tools.length > 0)
+
+export const pad = (n) => String(n).padStart(2, '0')
+export const num = (i) => pad(i + 1)
+export const numberOf = (tool) => num(ordered.findIndex((t) => t.id === tool.id))
+export const total = pad(ordered.length)
+
+// Case-insensitive substring match over name, description, id and category name.
+export function matchTools(query) {
+  const q = (query || '').trim().toLowerCase()
+  if (!q) return ordered
+  return ordered.filter((t) =>
+    `${t.name} ${t.description} ${t.id} ${categoryOf(t).name}`.toLowerCase().includes(q),
+  )
+}
+
+// The architect wrote Slugify as the reference tool; every other tool was built by a worker.
+export const WORKER_TOOLS = ordered.filter((t) => t.id !== 'slugify')
+```
+
+## File 2: `src/shell/useRoute.js`
 
 ```js
 import { useEffect, useState } from 'react'
 import { tools } from '../registry.js'
+import { articleBySlug } from '../articles/registry.js'
 
-// '#/json-formatter' -> { kind: 'tool', tool }, '#/about' -> about, anything else -> home
+const HOME = { kind: 'home', tool: null, article: null }
+
+// '#/json-formatter' -> tool, '#/about' -> about, '#/articles' -> articles,
+// '#/articles/<slug>' -> article (or articles when the slug is unknown), else home
 export function parseHash(hash) {
   const path = (hash || '').replace(/^#\/?/, '').replace(/\/+$/, '')
-  if (path === '') return { kind: 'home', tool: null }
-  if (path === 'about') return { kind: 'about', tool: null }
+  if (path === '') return HOME
+  if (path === 'about') return { kind: 'about', tool: null, article: null }
+  if (path === 'articles') return { kind: 'articles', tool: null, article: null }
+  if (path.startsWith('articles/')) {
+    const article = articleBySlug(path.slice('articles/'.length))
+    return article
+      ? { kind: 'article', tool: null, article }
+      : { kind: 'articles', tool: null, article: null }
+  }
   const tool = tools.find((t) => t.id === path)
-  return tool ? { kind: 'tool', tool } : { kind: 'home', tool: null }
+  return tool ? { kind: 'tool', tool, article: null } : HOME
 }
 
 export default function useRoute() {
@@ -45,7 +116,7 @@ export default function useRoute() {
 }
 ```
 
-## File 2: `src/App.jsx`
+## File 3: `src/App.jsx`
 
 Replace the whole file:
 
@@ -55,8 +126,18 @@ import useRoute from './shell/useRoute.js'
 import Workspace from './shell/Workspace.jsx'
 import Home from './pages/Home.jsx'
 import About from './pages/About.jsx'
+import Articles from './pages/Articles.jsx'
+import Article from './pages/Article.jsx'
 
 const HOME_TITLE = 'TwigKit — Tiny tools, done beautifully'
+
+function titleFor(route) {
+  if (route.kind === 'tool') return `${route.tool.name} · TwigKit`
+  if (route.kind === 'about') return "How it's built · TwigKit"
+  if (route.kind === 'articles') return 'Articles · TwigKit'
+  if (route.kind === 'article') return `${route.article.title} · TwigKit`
+  return HOME_TITLE
+}
 
 function focusMain(e) {
   e.preventDefault()
@@ -70,48 +151,38 @@ export default function App() {
   const route = useRoute()
 
   useEffect(() => {
-    document.title =
-      route.kind === 'tool'
-        ? `${route.tool.name} · TwigKit`
-        : route.kind === 'about'
-          ? "How it's built · TwigKit"
-          : HOME_TITLE
+    document.title = titleFor(route)
     if (typeof window.scrollTo === 'function') window.scrollTo(0, 0)
-  }, [route.kind, route.tool])
+  }, [route])
+
+  let page
+  if (route.kind === 'tool') page = <Workspace tool={route.tool} />
+  else if (route.kind === 'about') page = <About />
+  else if (route.kind === 'articles') page = <Articles />
+  else if (route.kind === 'article') page = <Article article={route.article} />
+  else page = <Home />
 
   return (
     <>
       <a className="skip-link" href="#/" onClick={focusMain}>
         Skip to content
       </a>
-      {route.kind === 'tool' ? (
-        <Workspace tool={route.tool} />
-      ) : route.kind === 'about' ? (
-        <About />
-      ) : (
-        <Home />
-      )}
+      {page}
     </>
   )
 }
 ```
 
-## File 3: `src/shell/Workspace.jsx`
+## File 4: `src/shell/Workspace.jsx`
 
-Props: `tool` — a registry item `{ id, name, description, icon, component }`.
+Props: `tool` — a registry item `{ id, name, description, icon, category, component }`.
 
 ```jsx
-import { Suspense, useEffect, useRef } from 'react'
-import { tools } from '../registry.js'
-import Brand from '../ui/chrome/Brand.jsx'
-import ToolTile from '../ui/chrome/ToolTile.jsx'
-import ThemeToggle from '../ui/chrome/ThemeToggle.jsx'
+import { Suspense } from 'react'
+import { categoryOf, numberOf, total } from '../catalog.js'
+import { articlesForTool, readingTime } from '../articles/registry.js'
+import Rail from './Rail.jsx'
 import './Workspace.css'
-
-const REPO_URL = 'https://github.com/codetwigdev/twigkit'
-
-const pad = (n) => String(n).padStart(2, '0')
-const num = (i) => pad(i + 1)
 
 function Arrow() {
   return (
@@ -123,79 +194,16 @@ function Arrow() {
 
 export default function Workspace({ tool }) {
   const Tool = tool.component
-  const index = tools.findIndex((t) => t.id === tool.id)
-  const stripRef = useRef(null)
-
-  // keep the active chip visible in the mobile strip
-  useEffect(() => {
-    const active = stripRef.current?.querySelector('.chip.is-active')
-    if (active && typeof active.scrollIntoView === 'function') {
-      active.scrollIntoView({ inline: 'center', block: 'nearest' })
-    }
-  }, [tool.id])
+  const related = articlesForTool(tool.id)[0]
 
   return (
     <div className="ws">
-      <aside className="rail">
-        <div className="rail-top">
-          <Brand />
-        </div>
-        <p className="eyebrow rail-label">Tools</p>
-        <nav className="rail-nav" aria-label="Tools">
-          <ol className="rail-list">
-            {tools.map((t, i) => (
-              <li key={t.id}>
-                <a
-                  className={t.id === tool.id ? 'rail-item is-active' : 'rail-item'}
-                  href={`#/${t.id}`}
-                  aria-current={t.id === tool.id ? 'page' : undefined}
-                >
-                  <span className="rail-num">{num(i)}</span>
-                  <ToolTile glyph={t.icon} size="sm" />
-                  <span className="rail-name">{t.name}</span>
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
-        <div className="rail-foot">
-          <a className="rail-link" href="#/about">
-            How it's built <Arrow />
-          </a>
-          <a className="rail-link" href={REPO_URL}>
-            Source on GitHub
-          </a>
-          <div className="rail-foot-row">
-            <ThemeToggle />
-            <span className="rail-note">Runs in your browser. Nothing is uploaded.</span>
-          </div>
-        </div>
-      </aside>
-
-      <div className="ws-mobile">
-        <div className="ws-bar">
-          <Brand />
-          <ThemeToggle />
-        </div>
-        <nav className="strip" aria-label="Tools" ref={stripRef}>
-          {tools.map((t) => (
-            <a
-              key={t.id}
-              className={t.id === tool.id ? 'chip is-active' : 'chip'}
-              href={`#/${t.id}`}
-              aria-current={t.id === tool.id ? 'page' : undefined}
-            >
-              <ToolTile glyph={t.icon} size="sm" />
-              {t.name}
-            </a>
-          ))}
-        </nav>
-      </div>
+      <Rail tool={tool} />
 
       <main id="main" tabIndex={-1} className="ws-main">
         <header className="tool-head">
           <p className="eyebrow">
-            Tool {num(index)} of {pad(tools.length)}
+            Tool {numberOf(tool)} of {total} · {categoryOf(tool).name}
           </p>
           <h1 className="tool-title">{tool.name}</h1>
           <p className="tool-desc">{tool.description}</p>
@@ -205,9 +213,20 @@ export default function Workspace({ tool }) {
             <Tool key={tool.id} />
           </Suspense>
         </div>
+        {related && (
+          <aside className="tool-related" aria-label="Related article">
+            <p className="eyebrow">From the notebook</p>
+            <a className="tool-related-link" href={`#/articles/${related.slug}`}>
+              {related.title} <Arrow />
+            </a>
+            <p className="tool-related-meta">
+              {related.summary} <span className="tool-related-time">{readingTime(related)}</span>
+            </p>
+          </aside>
+        )}
         <p className="ws-foot">
           Nothing you type leaves this tab. <a href="#/">All tools</a> ·{' '}
-          <a href="#/about">How it's built</a>
+          <a href="#/articles">Articles</a> · <a href="#/about">How it's built</a>
         </p>
       </main>
     </div>
@@ -215,10 +234,11 @@ export default function Workspace({ tool }) {
 }
 ```
 
-The eyebrow reads `Tool 03 of 09`. The `key={tool.id}` resets tool state when switching
-tools.
+The eyebrow reads `Tool 09 of 17 · Encode & decode`. The `key={tool.id}` resets tool
+state when switching tools. The related block only appears when an article names this
+tool in its `tool` field.
 
-## File 4: `src/shell/Workspace.css`
+## File 5: `src/shell/Workspace.css`
 
 Write exactly:
 
@@ -226,130 +246,6 @@ Write exactly:
 .ws {
   display: flex;
   min-height: 100vh;
-}
-
-/* ----- desktop rail ----- */
-.rail {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  width: var(--rail-w);
-  flex: 0 0 var(--rail-w);
-  display: flex;
-  flex-direction: column;
-  padding: 20px 16px 16px;
-  border-right: 1px solid var(--line);
-  overflow-y: auto;
-}
-.rail-top {
-  padding: 0 8px 20px;
-}
-.rail-label {
-  padding: 0 8px;
-  margin: 0 0 8px;
-}
-.rail-nav {
-  flex: 1;
-}
-.rail-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.rail-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: var(--r-2);
-  color: var(--ink-2);
-  font-size: 14px;
-  line-height: 1.3;
-  text-decoration: none;
-  transition: background-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
-}
-.rail-item:hover {
-  background: var(--well);
-  color: var(--ink);
-}
-.rail-item:hover .tile {
-  border-color: var(--line-strong);
-  color: var(--ink);
-}
-.rail-item.is-active {
-  background: var(--moss-soft);
-  color: var(--moss-ink);
-  font-weight: 500;
-}
-.rail-item.is-active .tile {
-  background: var(--moss);
-  border-color: var(--moss);
-  color: var(--on-moss);
-}
-.rail-item:focus-visible {
-  outline: 2px solid var(--moss);
-  outline-offset: -2px;
-}
-.rail-num {
-  flex: 0 0 18px;
-  width: 18px;
-  font: 500 11px/1 var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-}
-.rail-item.is-active .rail-num {
-  color: var(--moss);
-}
-.rail-name {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.rail-foot {
-  margin-top: auto;
-  padding: 16px 8px 0;
-  border-top: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.rail-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--ink-2);
-  text-decoration: none;
-}
-.rail-link:hover {
-  color: var(--moss-ink);
-}
-.rail-link .icon-arrow {
-  transition: transform var(--t-fast) var(--ease-out);
-}
-.rail-link:hover .icon-arrow {
-  transform: translateX(2px);
-}
-.rail-foot-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-}
-.rail-note {
-  font-size: 12px;
-  line-height: 1.3;
-  color: var(--muted);
-}
-
-/* ----- mobile bar + strip (hidden on desktop) ----- */
-.ws-mobile {
-  display: none;
 }
 
 /* ----- content column ----- */
@@ -387,6 +283,54 @@ Write exactly:
   font: 13px/1.5 var(--font-mono);
   color: var(--muted);
 }
+
+/* ----- related article ----- */
+.tool-related {
+  margin: 40px 0 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--moss);
+  border-radius: var(--r-2);
+  background: var(--panel);
+  max-width: 64ch;
+}
+.tool-related .eyebrow {
+  margin: 0 0 8px;
+}
+.tool-related-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 400 20px/1.2 var(--font-display);
+  color: var(--ink);
+  text-decoration: none;
+}
+.tool-related-link:hover {
+  color: var(--moss-ink);
+}
+.tool-related-link .icon-arrow {
+  flex: 0 0 16px;
+  color: var(--moss);
+  transition: transform var(--t-fast) var(--ease-out);
+}
+.tool-related-link:hover .icon-arrow {
+  transform: translateX(3px);
+}
+.tool-related-meta {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.tool-related-time {
+  margin-left: 6px;
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ----- footer line ----- */
 .ws-foot {
   margin: 48px 0 0;
   padding-top: 16px;
@@ -399,64 +343,6 @@ Write exactly:
   .ws {
     display: block;
   }
-  .rail {
-    display: none;
-  }
-  .ws-mobile {
-    display: block;
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: var(--paper);
-    border-bottom: 1px solid var(--line);
-  }
-  .ws-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-    padding: 0 16px;
-  }
-  .strip {
-    display: flex;
-    gap: 8px;
-    padding: 0 16px 12px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .strip::-webkit-scrollbar {
-    display: none;
-  }
-  .chip {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    height: 36px;
-    padding: 0 12px 0 5px;
-    border: 1px solid var(--line);
-    border-radius: var(--r-pill);
-    background: var(--panel);
-    color: var(--ink-2);
-    font-size: 13px;
-    white-space: nowrap;
-    text-decoration: none;
-  }
-  .chip.is-active {
-    background: var(--moss);
-    border-color: var(--moss);
-    color: var(--on-moss);
-  }
-  .chip.is-active .tile {
-    background: transparent;
-    border-color: color-mix(in srgb, currentColor 35%, transparent);
-    color: var(--on-moss);
-  }
-  .chip:focus-visible {
-    outline: 2px solid var(--moss);
-    outline-offset: 2px;
-  }
   .ws-main {
     max-width: none;
     padding: 24px 16px 40px;
@@ -464,21 +350,30 @@ Write exactly:
   .tool-title {
     font-size: 28px;
   }
+  .tool-related {
+    margin-top: 32px;
+    padding: 16px;
+  }
 }
 ```
 
 ## How to tell it is right
 
-- `#/json-formatter` shows a left rail with the twig logo, "TOOLS" eyebrow, nine
-  numbered rows (`01` … `09`, each with a small glyph tile and name); the current tool's
-  row is pale green with a solid green tile. The rail stays put while the page scrolls.
-- The content column shows a green eyebrow `TOOL 03 OF 09`, a large serif title, a grey
-  description, a hairline, then the tool.
-- `#/` shows the Home page, `#/about` the About page, `#/nonsense` the Home page.
+- `#/json-formatter` shows a left rail (built by package 15) and a content column with a
+  green eyebrow `TOOL 06 OF 17 · DATA` (the number is JSON Formatter's position in the
+  category-ordered list; it must match the number next to it in the rail and on Home), a
+  large serif title, a grey description, a hairline, then the tool.
+- `#/` shows Home, `#/about` About, `#/articles` the articles index, `#/articles/nonsense`
+  the articles index, `#/nonsense` Home.
 - Switching tools in the rail resets the previous tool's typed input.
-- At 800px wide the rail disappears; a sticky bar with logo and theme button sits above
-  a horizontal row of pill chips; the active chip is solid green and scrolled into view.
+- When an article has `tool: 'encode-decode'`, `#/encode-decode` shows, under the tool, a
+  panel with a 3px green left edge: `FROM THE NOTEBOOK`, the article title in serif with
+  a green arrow, the summary and a small `N MIN READ`. Tools without an article show no
+  panel.
+- The footer line reads `Nothing you type leaves this tab. All tools · Articles · How
+  it's built`.
 - Press Tab once on page load: a green "Skip to content" pill appears top-left; Enter
   moves focus to the content column without changing the URL hash.
-- The browser tab title reads "JSON Formatter · TwigKit".
+- The browser tab title reads "JSON Formatter · TwigKit"; on `#/articles` it reads
+  "Articles · TwigKit".
 - `npm test` passes.

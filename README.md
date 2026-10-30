@@ -14,6 +14,18 @@ nothing leaves your machine.
 | Regex Tester | Live match highlighting, capture groups |
 | Text Stats | Counts, reading time, case conversion |
 | Slugify | Title to URL slug |
+| JWT Decoder | Header, payload and expiry of a token (no verification) |
+| Hash Generator | SHA-1, SHA-256, SHA-384 and SHA-512 via Web Crypto |
+| CSV / JSON | Convert both ways, quoted fields and delimiters handled |
+| Cron Explainer | A cron line in plain English, plus the next run times |
+| Number Base | Binary, octal, decimal and hex, exact beyond 2^53 |
+| URL Parser | Parts, query parameters and encodings |
+| Line Tools | Sort, dedupe, trim, reverse |
+| HTML Entities | Escape and unescape |
+
+There are also [articles](src/articles) on the ideas behind the tools (Base64, JWTs, regex,
+Unix time, cron, hashing) and on how the site itself is built. Add one by dropping a module
+in `src/articles/`; the format is in [`docs/articles/STYLE.md`](docs/articles/STYLE.md).
 
 ```bash
 npm install

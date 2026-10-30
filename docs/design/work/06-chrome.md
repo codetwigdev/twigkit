@@ -13,6 +13,11 @@ files:
 
 # 06 — Chrome: brand, tool tile, theme toggle, site header, footer, favicon
 
+> Changed in v1.1: `SiteHeader` gains an `Articles` link and accepts
+> `current="articles"`; the footer gains the same link; the brand wordmark hides on very
+> narrow phones so three nav links fit; `index.html` meta description mentions the new
+> tools. Everything else is unchanged from v1.
+
 You own the small shared pieces every page uses: the logo (`Brand`), the glyph tile that
 represents a tool (`ToolTile`), the theme toggle and the theme store behind it, the site
 header used by Home and About, the footer, the HTML entry file and the favicon.
@@ -174,7 +179,7 @@ export default function ThemeToggle() {
 
 ## File 5: `src/ui/chrome/SiteHeader.jsx`
 
-Props: `current` = `'home' | 'about'`.
+Props: `current` = `'home' | 'articles' | 'about'`.
 
 ```jsx
 import Brand from './Brand.jsx'
@@ -189,6 +194,9 @@ export default function SiteHeader({ current }) {
         <nav className="site-nav" aria-label="Site">
           <a href="#/" aria-current={current === 'home' ? 'page' : undefined}>
             Tools
+          </a>
+          <a href="#/articles" aria-current={current === 'articles' ? 'page' : undefined}>
+            Articles
           </a>
           <a href="#/about" aria-current={current === 'about' ? 'page' : undefined}>
             How it's built
@@ -219,6 +227,7 @@ export default function Footer() {
         </div>
         <nav className="site-footer-nav" aria-label="Footer">
           <a href="#/">Tools</a>
+          <a href="#/articles">Articles</a>
           <a href="#/about">How it's built</a>
           <a href={REPO_URL}>Source on GitHub</a>
         </nav>
@@ -432,6 +441,14 @@ Write exactly:
     padding: 32px 16px 40px;
   }
 }
+@media (max-width: 439px) {
+  .site-header .brand-name {
+    display: none;
+  }
+  .site-nav {
+    gap: 12px;
+  }
+}
 ```
 
 ## File 8: `index.html`
@@ -444,7 +461,7 @@ Replace the whole file:
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="TwigKit: tiny developer utilities that run entirely in your browser. JSON, Base64, timestamps, colours, UUIDs, diffs, regex, text stats and slugs. Free and open source." />
+    <meta name="description" content="TwigKit: tiny developer utilities that run entirely in your browser. JSON, CSV, Base64, JWTs, hashes, timestamps, cron, colours, UUIDs, diffs, regex and more, plus short articles on the ideas behind them. Free and open source." />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#F5F2EA" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#141613" media="(prefers-color-scheme: dark)" />
@@ -483,7 +500,12 @@ Replace the whole file with the twig mark on a moss square:
   `localStorage['twigkit-theme']`). In Auto the key is absent and `<html>` has no
   `data-theme` attribute.
 - Set Dark, reload: no flash of the light theme before React mounts.
-- Footer: logo and an italic serif tagline on the left, three links on the right, and a
-  hairline-separated grey note below; on a phone it stacks in one column.
+- The header nav on Home reads `Tools` (underlined green), `Articles`, `How it's built`,
+  then the theme pill; on `#/articles` the `Articles` link is the underlined one. At
+  375px wide the twig logo shows without the "TwigKit" word and all three links fit on
+  one line with the theme pill, with no horizontal scroll.
+- Footer: logo and an italic serif tagline on the left, four links on the right
+  (`Tools`, `Articles`, `How it's built`, `Source on GitHub`), and a hairline-separated
+  grey note below; on a phone it stacks in one column.
 - Glyph tiles are square, monospace, bold, slightly darker than the page with a hairline
   border, in three sizes (26/44/56px).

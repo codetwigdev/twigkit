@@ -13,6 +13,7 @@ export default function Footer() {
         </div>
         <nav className="site-footer-nav" aria-label="Footer">
           <a href="#/">Tools</a>
+          <a href="#/articles">Articles</a>
           <a href="#/about">How it's built</a>
           <a href={REPO_URL}>Source on GitHub</a>
         </nav>

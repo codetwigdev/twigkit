@@ -5,5 +5,6 @@ export default {
   name: "JWT Decoder",
   description: "Decode a JSON Web Token and inspect its claims.",
   icon: "jw",
+  category: 'encode',
   component: lazy(() => import('./Tool.jsx')),
 }

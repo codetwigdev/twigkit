@@ -370,3 +370,88 @@ mark {
 .tool-body > .grid-2 > div > h2:first-child {
   margin-top: 0;
 }
+
+/* ---------- new in v1.1 ---------- */
+
+/* an output that sits inside a labelled field (hash digests, number bases) */
+.field > .out {
+  margin: 0;
+}
+
+/* ordered lists in tools read like the unordered ones */
+.tool-body ol {
+  margin: 0 0 16px;
+  padding-left: 24px;
+  font: 13px/1.6 var(--font-mono);
+  color: var(--ink-2);
+}
+
+/* key / value table: URL parts, JWT claims, parsed fields */
+table.kv {
+  width: 100%;
+  margin: 0 0 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  border-spacing: 0;
+  background: var(--well);
+  font: 13px/1.5 var(--font-mono);
+  overflow: hidden;
+}
+table.kv th,
+table.kv td {
+  padding: 7px 12px;
+  vertical-align: top;
+  text-align: left;
+  border-top: 1px solid var(--line);
+}
+table.kv tr:first-child th,
+table.kv tr:first-child td {
+  border-top: 0;
+}
+table.kv th {
+  width: 32%;
+  font: 500 11px/1.6 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+table.kv td {
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+table.kv td:empty::before {
+  content: '—';
+  color: var(--muted);
+}
+
+/* monospace list in a well: cron run times, split lines, generated values */
+.list-mono {
+  margin: 0 0 16px;
+  padding: 10px 14px 10px 40px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--moss);
+  border-radius: var(--r-2);
+  background: var(--well);
+  color: var(--ink);
+  font: 13px/1.6 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.list-mono li {
+  padding: 2px 0;
+  overflow-wrap: anywhere;
+}
+.list-mono li::marker {
+  color: var(--muted);
+}
+.list-mono:empty {
+  display: none;
+}
+
+@media (max-width: 599px) {
+  table.kv th {
+    width: 38%;
+    white-space: normal;
+  }
+}

@@ -6,20 +6,32 @@ files:
 
 # 07 — Tests for routing and theme
 
+> Changed in v1.1: routing tests cover `#/articles`, `#/articles/<slug>`, the `Articles`
+> nav link, the derived tool count in the workspace eyebrow and the catalog's numbering.
+> `theme.test.js` is unchanged.
+
 You own two small test files. They check the shared contracts other packages implement:
-hash routing in `src/App.jsx` and the theme store in `src/theme.js`. Write only the tests
-below, nothing else. The project uses Vitest with jsdom, `globals: true`, and
-`@testing-library/jest-dom` matchers (see `vite.config.js` and `src/test-setup.js`).
+hash routing in `src/App.jsx`, the catalog in `src/catalog.js`, and the theme store in
+`src/theme.js`. Write only the tests below, nothing else. The project uses Vitest with
+jsdom, `globals: true`, and `@testing-library/jest-dom` matchers (see `vite.config.js`
+and `src/test-setup.js`).
 
 Facts the tests rely on (from the contracts):
 
 - `App` renders the Home page for `#/`, empty hash and unknown hashes; the About page
-  for `#/about`; the tool workspace for `#/<tool-id>`.
-- Home's `<h1>` contains the text `Tiny tools`. About's `<h1>` contains `One architect`.
-  A tool page's `<h1>` is the tool name, e.g. `JSON Formatter` for `#/json-formatter`.
-- Every page has `<main id="main" tabIndex={-1}>`.
+  for `#/about`; the articles index for `#/articles` and for `#/articles/<unknown>`; an
+  article for `#/articles/<slug>`; the tool workspace for `#/<tool-id>`.
+- Home's `<h1>` contains `Tiny tools`. About's `<h1>` contains `One architect`. The
+  articles index `<h1>` contains `From the notebook`. An article page's `<h1>` is its
+  `title`. A tool page's `<h1>` is the tool name, e.g. `JSON Formatter`.
+- Every page has `<main id="main" tabIndex={-1}>` and a link with text `Articles`
+  pointing at `#/articles`.
 - Document titles: home `TwigKit — Tiny tools, done beautifully`, about
-  `How it's built · TwigKit`, tool `JSON Formatter · TwigKit`.
+  `How it's built · TwigKit`, articles `Articles · TwigKit`, tool `JSON Formatter · TwigKit`.
+- The tool page eyebrow reads `Tool NN of NN · <Category>`, where the total is
+  `tools.length` zero-padded.
+- `src/catalog.js` exports `ordered`, `numberOf`, `total`, `WORKER_TOOLS`, `matchTools`,
+  `groups`. `src/articles/registry.js` exports `articles` (may be empty).
 - `src/theme.js` exports `THEME_KEY` (`'twigkit-theme'`), `getTheme`, `applyTheme`,
   `setTheme`, `nextTheme`. Theme is `'auto' | 'light' | 'dark'`. `'auto'` stores no key
   and removes `data-theme` from `<html>`; `setTheme` dispatches a `twigkit:theme`
@@ -31,11 +43,16 @@ Facts the tests rely on (from the contracts):
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App.jsx'
+import { tools } from './registry.js'
+import { groups, matchTools, numberOf, ordered, total, WORKER_TOOLS } from './catalog.js'
+import { articles } from './articles/registry.js'
 
 function renderAt(hash) {
   window.location.hash = hash
   return render(<App />)
 }
+
+const pad = (n) => String(n).padStart(2, '0')
 
 beforeEach(() => {
   window.scrollTo = vi.fn()
@@ -69,19 +86,39 @@ describe('routing', () => {
     expect(document.title).toBe("How it's built · TwigKit")
   })
 
-  it('shows a tool at #/<id>', () => {
+  it('shows the articles index at #/articles and for an unknown slug', () => {
+    renderAt('#/articles')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('From the notebook')
+    expect(document.title).toBe('Articles · TwigKit')
+    cleanup()
+    renderAt('#/articles/no-such-article')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('From the notebook')
+  })
+
+  it.skipIf(articles.length === 0)('shows an article at #/articles/<slug>', () => {
+    const a = articles[0]
+    renderAt(`#/articles/${a.slug}`)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(a.title)
+    expect(document.title).toBe(`${a.title} · TwigKit`)
+  })
+
+  it('shows a tool at #/<id> with a derived index number', () => {
     renderAt('#/json-formatter')
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('JSON Formatter')
     expect(document.title).toBe('JSON Formatter · TwigKit')
+    const tool = tools.find((t) => t.id === 'json-formatter')
+    expect(screen.getByText(`Tool ${numberOf(tool)} of ${total} · Data`)).toBeInTheDocument()
   })
 
-  it('has a focusable main landmark on every page', () => {
-    for (const hash of ['#/', '#/about', '#/slugify']) {
+  it('has a focusable main landmark and an Articles link on every page', () => {
+    for (const hash of ['#/', '#/about', '#/articles', '#/slugify']) {
       renderAt(hash)
       const main = document.getElementById('main')
       expect(main).not.toBeNull()
       expect(main.tagName).toBe('MAIN')
       expect(main.getAttribute('tabindex')).toBe('-1')
+      const links = screen.getAllByRole('link', { name: 'Articles' })
+      expect(links.some((l) => l.getAttribute('href') === '#/articles')).toBe(true)
       cleanup()
     }
   })
@@ -92,7 +129,34 @@ describe('routing', () => {
     expect(skip).toHaveClass('skip-link')
   })
 })
+
+describe('catalog', () => {
+  it('numbers every tool once, in category order, zero-padded', () => {
+    expect(ordered).toHaveLength(tools.length)
+    expect(total).toBe(pad(tools.length))
+    const numbers = ordered.map(numberOf)
+    expect(numbers).toEqual(ordered.map((_, i) => pad(i + 1)))
+    const flat = groups.flatMap((g) => g.tools.map((t) => t.id))
+    expect(flat).toEqual(ordered.map((t) => t.id))
+  })
+
+  it('treats every tool but slugify as worker-built', () => {
+    expect(WORKER_TOOLS).toHaveLength(tools.length - 1)
+    expect(WORKER_TOOLS.some((t) => t.id === 'slugify')).toBe(false)
+  })
+
+  it('matches by name, description, id and category name', () => {
+    expect(matchTools('')).toEqual(ordered)
+    expect(matchTools('JSON FORMATTER').map((t) => t.id)).toContain('json-formatter')
+    expect(matchTools('encode & decode').map((t) => t.id)).toContain('encode-decode')
+    expect(matchTools('zzzz')).toEqual([])
+  })
+})
 ```
+
+The `Tool NN of NN · Data` assertion relies on `json-formatter` having `category:
+'data'` in its `index.js`. If the project manager has not yet added categories, this one
+assertion fails; report it rather than changing it.
 
 ## File 2: `src/theme.test.js`
 
@@ -151,7 +215,8 @@ describe('theme', () => {
 
 ## How to tell it is right
 
-- `npm test` runs 12 test files; the two new ones pass once packages 03, 04, 05 and 06
-  are in place (they will fail with import errors before that, which is expected).
+- `npm test` passes once packages 03, 04, 05, 06, 08–11 and 13–16 are in place (the two
+  files fail with import errors before that, which is expected). The article test is
+  skipped while there are no article modules.
 - Do not loosen a failing assertion to make it pass; the assertions are the contract. If
   one fails after all packages are merged, report which one.

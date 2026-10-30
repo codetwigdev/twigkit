@@ -1,3 +1,6 @@
+import { tools } from '../registry.js'
+import { WORKER_TOOLS } from '../catalog.js'
+import { articles } from '../articles/registry.js'
 import SiteHeader from '../ui/chrome/SiteHeader.jsx'
 import Footer from '../ui/chrome/Footer.jsx'
 import CopyButton from '../ui/CopyButton.jsx'
@@ -5,13 +8,6 @@ import FlowDiagram from './FlowDiagram.jsx'
 import './About.css'
 
 const REPO_URL = 'https://github.com/codetwigdev/twigkit'
-
-const FIGURES = [
-  { value: '8', label: 'tools built by workers' },
-  { value: '89', label: 'tests, all passing' },
-  { value: '~14 s', label: 'for a full parallel run' },
-  { value: '0', label: 'bytes uploaded, ever' },
-]
 
 const COMMANDS = [
   {
@@ -34,6 +30,13 @@ function Arrow() {
 }
 
 export default function About() {
+  const figures = [
+    { value: String(tools.length), label: 'tools in the kit' },
+    { value: String(WORKER_TOOLS.length), label: 'of them typed by Qwen workers' },
+    { value: String(articles.length), label: 'articles, written the same way' },
+    { value: '0', label: 'bytes uploaded, ever' },
+  ]
+
   return (
     <div className="about">
       <SiteHeader current="about" />
@@ -41,7 +44,7 @@ export default function About() {
         <section className="about-hero">
           <div className="about-hero-inner">
             <p className="eyebrow">How it's built</p>
-            <h1 className="about-title">One architect, eight workers, and a test suite between them.</h1>
+            <h1 className="about-title">One architect, a team of workers, and a test suite between them.</h1>
             <p className="about-lead">
               TwigKit is a free test project. A strong model (Claude) designs the structure
               and writes the contracts; a cheaper local model (Qwen) does the bulk typing, in
@@ -53,7 +56,7 @@ export default function About() {
 
         <section className="about-section" aria-label="Key figures">
           <ul className="figures">
-            {FIGURES.map((f) => (
+            {figures.map((f) => (
               <li key={f.label} className="figure">
                 <b>{f.value}</b>
                 <span>{f.label}</span>
@@ -85,7 +88,7 @@ export default function About() {
               </p>
             </li>
             <li className="story-item">
-              <h3>Eight workers type in parallel</h3>
+              <h3>Workers type in parallel</h3>
               <p>
                 Each Qwen worker, running against a local vLLM server, receives one spec and
                 one test file and returns two files: <code>logic.js</code> (pure functions)
@@ -108,12 +111,24 @@ export default function About() {
                 The fix went into the worker guide, and those tools were re-dispatched.
               </p>
             </li>
+            <li className="story-item">
+              <h3>The site gets a design</h3>
+              <p>
+                The first version looked like a default template. A designer model wrote a
+                design document and split it into work packages, one file set each; a team
+                of Qwen workers built the packages in parallel, and the architect reviewed
+                the result in a browser. This page is one of those packages.
+              </p>
+            </li>
+            <li className="story-item">
+              <h3>The kit grows</h3>
+              <p>
+                New tools and the articles were added the same way: scaffold a folder, write
+                the spec and the tests, dispatch a worker, let the tests decide. Nothing
+                about the method changed; only the number of folders did.
+              </p>
+            </li>
           </ol>
-          <p className="build-note">
-            This site was built the same way. A Fable 5.1 designer wrote the design and seven
-            work packages; seven Qwen workers built them in about 40 seconds, and the
-            architect reviewed the result in a browser.
-          </p>
         </section>
 
         <section className="about-section" aria-labelledby="build-title">
@@ -140,6 +155,10 @@ export default function About() {
           </ol>
           <p className="build-note">
             dispatch talks to any OpenAI-compatible endpoint: vLLM, Ollama, LM Studio.
+          </p>
+          <p className="build-note">
+            Articles work the same way: a module under <code>src/articles/</code> with a
+            default export is an article. See <a href="#/articles">the notebook</a>.
           </p>
           <a className="build-link" href={REPO_URL}>
             Read the worker guide and the specs on GitHub <Arrow />

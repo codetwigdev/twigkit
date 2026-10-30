@@ -11,6 +11,9 @@ export default function SiteHeader({ current }) {
           <a href="#/" aria-current={current === 'home' ? 'page' : undefined}>
             Tools
           </a>
+          <a href="#/articles" aria-current={current === 'articles' ? 'page' : undefined}>
+            Articles
+          </a>
           <a href="#/about" aria-current={current === 'about' ? 'page' : undefined}>
             How it's built
           </a>

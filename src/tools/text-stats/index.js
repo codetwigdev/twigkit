@@ -5,5 +5,6 @@ export default {
   name: "Text Stats",
   description: "Count words and characters, convert text case.",
   icon: "Aa",
+  category: 'text',
   component: lazy(() => import('./Tool.jsx')),
 }

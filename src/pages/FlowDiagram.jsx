@@ -1,6 +1,6 @@
-import './About.css'
-
-const WORKERS = ['json', 'base64', 'timestamp', 'color', 'uuid', 'diff', 'regex', 'stats']
+import { WORKER_TOOLS } from '../catalog.js'
+import ToolTile from '../ui/chrome/ToolTile.jsx'
+import './FlowDiagram.css'
 
 export default function FlowDiagram() {
   return (
@@ -14,12 +14,15 @@ export default function FlowDiagram() {
         </li>
         <li className="flow-step">
           <span className="flow-num" aria-hidden="true">2</span>
-          <span className="flow-who">Qwen × 8</span>
+          <span className="flow-who">Qwen × {WORKER_TOOLS.length}</span>
           <h3 className="flow-title">Workers implement in parallel</h3>
           <p className="flow-text">Each worker gets one spec and returns logic.js and Tool.jsx.</p>
-          <ul className="flow-workers" aria-label="Eight workers, one tool each">
-            {WORKERS.map((w) => (
-              <li key={w}>{w === 'timestamp' ? 'time' : w}</li>
+          <ul className="flow-workers" aria-label={`${WORKER_TOOLS.length} tools, one worker each`}>
+            {WORKER_TOOLS.map((t) => (
+              <li key={t.id} title={t.name}>
+                <ToolTile glyph={t.icon} size="sm" />
+                <span className="visually-hidden">{t.name}</span>
+              </li>
             ))}
           </ul>
         </li>
@@ -27,7 +30,7 @@ export default function FlowDiagram() {
           <span className="flow-num" aria-hidden="true">3</span>
           <span className="flow-who">vitest + oxlint</span>
           <h3 className="flow-title">Tests and lint verify</h3>
-          <p className="flow-text">89 tests and a lint pass, about 14 seconds for the whole set.</p>
+          <p className="flow-text">One test file per tool, plus lint and a build. A failure goes back to the worker.</p>
         </li>
         <li className="flow-step">
           <span className="flow-num" aria-hidden="true">4</span>

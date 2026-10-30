@@ -1,13 +1,24 @@
 import { useEffect, useState } from 'react'
 import { tools } from '../registry.js'
+import { articleBySlug } from '../articles/registry.js'
 
-// '#/json-formatter' -> { kind: 'tool', tool }, '#/about' -> about, anything else -> home
+const HOME = { kind: 'home', tool: null, article: null }
+
+// '#/json-formatter' -> tool, '#/about' -> about, '#/articles' -> articles,
+// '#/articles/<slug>' -> article (or articles when the slug is unknown), else home
 export function parseHash(hash) {
   const path = (hash || '').replace(/^#\/?/, '').replace(/\/+$/, '')
-  if (path === '') return { kind: 'home', tool: null }
-  if (path === 'about') return { kind: 'about', tool: null }
+  if (path === '') return HOME
+  if (path === 'about') return { kind: 'about', tool: null, article: null }
+  if (path === 'articles') return { kind: 'articles', tool: null, article: null }
+  if (path.startsWith('articles/')) {
+    const article = articleBySlug(path.slice('articles/'.length))
+    return article
+      ? { kind: 'article', tool: null, article }
+      : { kind: 'articles', tool: null, article: null }
+  }
   const tool = tools.find((t) => t.id === path)
-  return tool ? { kind: 'tool', tool } : { kind: 'home', tool: null }
+  return tool ? { kind: 'tool', tool, article: null } : HOME
 }
 
 export default function useRoute() {

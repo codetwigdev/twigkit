@@ -6,33 +6,38 @@ files:
 
 # 04 — Home page
 
-You own the home page: hero, "jump to a tool" search, the collection of nine tool cards,
-a short "how it's built" teaser, and the footer slot. Route `#/`.
+> Changed in v1.1: the tool collection moved into its own component (`Collection`,
+> package 13), a "From the notebook" section (`NotebookTeaser`, package 16) sits between
+> the collection and the build teaser, and every count is derived from the registry.
 
-Other packages provide `SiteHeader`, `Footer`, `ToolTile` (`src/ui/chrome/*.jsx`), the
-global tokens and base styles. Import them by path even if they do not exist yet.
-`src/registry.js` exports `tools` (sorted by name; items `{ id, name, description, icon }`).
+You own the home page: hero, "jump to a tool" search, the build teaser and the page
+frame. Route `#/`. The grouped tool cards and the articles teaser are separate
+components that you render.
+
+Other packages provide `SiteHeader`, `Footer` (`src/ui/chrome/*.jsx`), `Collection`
+(`src/pages/Collection.jsx`), `NotebookTeaser` (`src/pages/NotebookTeaser.jsx`),
+`src/catalog.js` (`matchTools`, `WORKER_TOOLS`) and the global tokens and base styles.
+`src/registry.js` exports `tools`. Import everything by path even if it does not exist
+yet.
 
 Visual idea: a sheet of warm paper with faint horizontal rules behind the hero, a very
-large serif headline, one green accent ("moss"), and a grid of "specimen cards": each tool
-is a glyph tile, an index number, a serif name and a one-line description.
+large serif headline, one green accent ("moss"), hairlines between sections.
 
 ## File 1: `src/pages/Home.jsx`
 
 ```jsx
 import { useEffect, useRef, useState } from 'react'
 import { tools } from '../registry.js'
+import { matchTools, WORKER_TOOLS } from '../catalog.js'
 import SiteHeader from '../ui/chrome/SiteHeader.jsx'
 import Footer from '../ui/chrome/Footer.jsx'
-import ToolTile from '../ui/chrome/ToolTile.jsx'
+import Collection from './Collection.jsx'
+import NotebookTeaser from './NotebookTeaser.jsx'
 import './Home.css'
-
-const pad = (n) => String(n).padStart(2, '0')
-const num = (i) => pad(i + 1)
 
 const STEPS = [
   { n: '01', name: 'Specify', text: 'Claude writes the spec, the tests and the shell.' },
-  { n: '02', name: 'Implement', text: 'Eight Qwen workers each build one tool, in parallel.' },
+  { n: '02', name: 'Implement', text: 'Qwen workers each build one tool, in parallel.' },
   { n: '03', name: 'Verify', text: 'Tests and lint run; failures go back to the worker.' },
   { n: '04', name: 'Review', text: 'Claude checks the result in a real browser.' },
 ]
@@ -57,13 +62,6 @@ export default function Home() {
   const [query, setQuery] = useState('')
   const inputRef = useRef(null)
 
-  const q = query.trim().toLowerCase()
-  const matches = q
-    ? tools.filter((t) =>
-        `${t.name} ${t.description} ${t.id}`.toLowerCase().includes(q),
-      )
-    : tools
-
   // "/" focuses the jump box from anywhere on the page
   useEffect(() => {
     function onKey(e) {
@@ -79,7 +77,8 @@ export default function Home() {
 
   function onSubmit(e) {
     e.preventDefault()
-    if (matches.length > 0) window.location.hash = `#/${matches[0].id}`
+    const first = matchTools(query)[0]
+    if (first) window.location.hash = `#/${first.id}`
   }
 
   function onKeyDown(e) {
@@ -92,14 +91,16 @@ export default function Home() {
       <main id="main" tabIndex={-1}>
         <section className="hero">
           <div className="hero-inner">
-            <p className="eyebrow hero-eyebrow">TwigKit · Nine small tools · Zero uploads</p>
+            <p className="eyebrow hero-eyebrow">
+              TwigKit · {tools.length} small tools · Zero uploads
+            </p>
             <h1 className="hero-title">
               Tiny tools,
               <br />
               <em>done beautifully.</em>
             </h1>
             <p className="hero-lead">
-              Format JSON, decode Base64, convert a timestamp, diff two texts. Each one is a
+              Format JSON, decode a token, read a cron line, diff two texts. Each one is a
               20-second job, and each one runs entirely in this tab. Nothing is uploaded,
               nothing is stored, nobody is asked to sign in.
             </p>
@@ -118,7 +119,7 @@ export default function Home() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={onKeyDown}
-                placeholder="Jump to a tool — try “json” or “uuid”"
+                placeholder="Jump to a tool — try “json” or “cron”"
                 autoComplete="off"
                 spellCheck="false"
               />
@@ -140,59 +141,22 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="collection" aria-labelledby="collection-title">
-          <div className="section-head">
-            <div>
-              <p className="eyebrow">The collection</p>
-              <h2 className="section-title" id="collection-title">
-                Pick a tool.
-              </h2>
-            </div>
-            <p className="section-count" aria-live="polite">
-              {q ? `${pad(matches.length)} of ` : ''}
-              {pad(tools.length)}
-            </p>
-          </div>
-          {matches.length > 0 ? (
-            <ul className="cards">
-              {matches.map((t) => {
-                const i = tools.indexOf(t)
-                return (
-                  <li key={t.id}>
-                    <a className="card" href={`#/${t.id}`}>
-                      <div className="card-top">
-                        <ToolTile glyph={t.icon} size="md" />
-                        <span className="card-num">No. {num(i)}</span>
-                      </div>
-                      <h3 className="card-name">{t.name}</h3>
-                      <p className="card-desc">{t.description}</p>
-                      <span className="card-cta">
-                        Open <Arrow />
-                      </span>
-                    </a>
-                  </li>
-                )
-              })}
-            </ul>
-          ) : (
-            <p className="collection-empty">
-              No tool matches “{query.trim()}”.{' '}
-              <a href="#/about">Build your own</a>
-            </p>
-          )}
-        </section>
+        <Collection query={query} />
+
+        <NotebookTeaser />
 
         <section className="teaser" aria-labelledby="teaser-title">
           <div className="teaser-inner">
             <div>
               <p className="eyebrow">How it's built</p>
               <h2 className="teaser-title" id="teaser-title">
-                Architected by Claude. Typed by Qwen. Checked by 89 tests.
+                Architected by Claude. Typed by Qwen. Checked by tests.
               </h2>
               <p className="teaser-text">
                 TwigKit is also a demonstration: one strong model writes the specs and the
-                tests, eight small local models implement the tools in parallel, and nothing
-                ships until the tests say so.
+                tests, small local models implement the tools in parallel, and nothing
+                ships until the tests say so. {WORKER_TOOLS.length} of the {tools.length}{' '}
+                tools here were typed by a worker; so were the articles.
               </p>
               <a className="teaser-link" href="#/about">
                 Read how it's built <Arrow />
@@ -216,8 +180,8 @@ export default function Home() {
 }
 ```
 
-The count on the right of "Pick a tool." reads `09` normally and `03 of 09` while
-filtering (`00 of 09` when nothing matches, next to the empty state).
+Pressing Enter in the jump box opens the first tool matching the typed text (category
+order), ignoring any category pill selected in the collection.
 
 ## File 2: `src/pages/Home.css`
 
@@ -334,125 +298,7 @@ Write exactly:
   color: var(--moss);
 }
 
-/* ----- collection ----- */
-.collection {
-  max-width: var(--page-max);
-  margin: 0 auto;
-  padding: 56px 32px 32px;
-}
-.section-head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 0 0 24px;
-}
-.section-head .eyebrow {
-  margin: 0;
-}
-.section-title {
-  font-size: clamp(26px, 3vw, 34px);
-  line-height: 1.1;
-  margin: 8px 0 0;
-}
-.section-count {
-  margin: 0;
-  font: 400 34px/1 var(--font-display);
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-}
-.cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 184px;
-  height: 100%;
-  padding: 20px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-3);
-  background: var(--panel);
-  color: var(--ink);
-  text-decoration: none;
-  transition: transform var(--t-base) var(--ease-out), border-color var(--t-base) var(--ease-out), box-shadow var(--t-base) var(--ease-out);
-}
-.card:hover {
-  transform: translateY(-2px);
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-card);
-}
-.card:hover .tile,
-.card:focus-visible .tile {
-  background: var(--moss);
-  border-color: var(--moss);
-  color: var(--on-moss);
-}
-.card:focus-visible {
-  outline: 2px solid var(--moss);
-  outline-offset: 2px;
-}
-.card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-.card-num {
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.card-name {
-  font-size: 22px;
-  line-height: 1.15;
-  margin: 6px 0 0;
-}
-.card-desc {
-  flex: 1;
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--ink-2);
-}
-.card-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--moss-ink);
-  opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
-}
-.card:hover .card-cta,
-.card:focus-visible .card-cta {
-  opacity: 1;
-  transform: none;
-}
-@media (hover: none) {
-  .card-cta {
-    opacity: 1;
-    transform: none;
-  }
-}
-.collection-empty {
-  margin: 0;
-  padding: 40px 20px;
-  border: 1px dashed var(--line-strong);
-  border-radius: var(--r-3);
-  text-align: center;
-  color: var(--muted);
-}
-
-/* ----- teaser ----- */
+/* ----- build teaser ----- */
 .teaser {
   border-top: 1px solid var(--line);
 }
@@ -531,9 +377,6 @@ Write exactly:
 
 /* ----- responsive ----- */
 @media (max-width: 899px) {
-  .cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
   .teaser-inner {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -549,16 +392,6 @@ Write exactly:
   .jump-hint {
     display: none;
   }
-  .collection {
-    padding: 40px 16px 24px;
-  }
-  .cards {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .card {
-    min-height: 0;
-  }
   .teaser-inner {
     padding: 40px 16px 48px;
   }
@@ -567,22 +400,21 @@ Write exactly:
 
 ## How to tell it is right
 
-- At 1280px: header (logo left, "Tools" underlined green, "How it's built", theme pill
-  right), then a hero on faintly ruled paper with a tiny green uppercase line, a huge
+- At 1280px: header (logo left, "Tools" underlined green, "Articles", "How it's built",
+  theme pill right), then a hero on faintly ruled paper with a tiny green uppercase line
+  `TWIGKIT · 17 SMALL TOOLS · ZERO UPLOADS` (the number comes from the registry), a huge
   serif "Tiny tools," over an italic green "done beautifully.", a grey lead paragraph,
   a 52px search box with a magnifier and a `/ to focus · ↵ to open` hint, and three
   green-check trust items.
-- "THE COLLECTION / Pick a tool." with a big serif "09" on the right, then nine cards in
-  three columns: glyph tile top-left, "NO. 01" top-right, serif name, grey description.
-  Hovering a card lifts it 2px, turns the tile solid green and reveals "Open →".
-- Typing "uuid" in the search box leaves one card and the count reads "01 of 09";
-  pressing Enter opens `#/random`. Typing "zzz" shows a dashed box "No tool matches
-  “zzz”. Build your own". Pressing `/` anywhere on the page focuses the box; Escape
-  clears it.
-- The teaser: eyebrow, serif heading "Architected by Claude. Typed by Qwen. Checked by
-  89 tests.", paragraph, green "Read how it's built →" link; on the right a 2×2 grid of
-  small cards 01 Specify … 04 Review.
-- At 375px everything is one column with 16px side gutters and no horizontal scroll;
-  the search hint is hidden; the "Open →" label is always visible on touch devices.
-- Dark mode: green-black paper, the ruled lines are barely visible, cards are a slightly
-  lighter green-black.
+- Below: the grouped collection (package 13), then "From the notebook" (package 16, only
+  when articles exist), then the build teaser: eyebrow, serif heading "Architected by
+  Claude. Typed by Qwen. Checked by tests.", a paragraph ending "16 of the 17 tools here
+  were typed by a worker; so were the articles." (numbers derived), a green "Read how
+  it's built →" link; on the right a 2×2 grid of small cards 01 Specify … 04 Review.
+- Typing "cron" in the search box and pressing Enter opens `#/cron`. Pressing `/`
+  anywhere on the page focuses the box; Escape clears it.
+- No literal number appears in `Home.jsx` other than the step numbers `01`–`04` and the
+  phrase "20-second job".
+- At 375px everything is one column with 16px side gutters and no horizontal scroll; the
+  search hint is hidden.
+- Dark mode: green-black paper, the ruled lines are barely visible.

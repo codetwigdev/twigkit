@@ -5,5 +5,6 @@ export default {
   name: "Hash Generator",
   description: "SHA-1, SHA-256, SHA-384 and SHA-512 of any text.",
   icon: "##",
+  category: 'encode',
   component: lazy(() => import('./Tool.jsx')),
 }

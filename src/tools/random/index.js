@@ -5,5 +5,6 @@ export default {
   name: "UUID / Random",
   description: "Generate UUIDs and random strings.",
   icon: "?",
+  category: 'pick',
   component: lazy(() => import('./Tool.jsx')),
 }

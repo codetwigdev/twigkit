@@ -5,5 +5,6 @@ export default {
   name: "Text Diff",
   description: "Compare two texts line by line.",
   icon: "+-",
+  category: 'text',
   component: lazy(() => import('./Tool.jsx')),
 }

@@ -5,5 +5,6 @@ export default {
   name: "JSON Formatter",
   description: "Format, validate and minify JSON.",
   icon: "{}",
+  category: 'data',
   component: lazy(() => import('./Tool.jsx')),
 }

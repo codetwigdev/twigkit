@@ -5,5 +5,6 @@ export default {
   name: 'Slugify',
   description: 'Turn a title into a clean URL slug.',
   icon: '/',
+  category: 'text',
   component: lazy(() => import('./Tool.jsx')),
 }

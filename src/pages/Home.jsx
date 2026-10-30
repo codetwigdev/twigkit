@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { tools } from '../registry.js'
+import { matchTools, WORKER_TOOLS } from '../catalog.js'
 import SiteHeader from '../ui/chrome/SiteHeader.jsx'
 import Footer from '../ui/chrome/Footer.jsx'
-import ToolTile from '../ui/chrome/ToolTile.jsx'
+import Collection from './Collection.jsx'
+import NotebookTeaser from './NotebookTeaser.jsx'
 import './Home.css'
-
-const pad = (n) => String(n).padStart(2, '0')
-const num = (i) => pad(i + 1)
 
 const STEPS = [
   { n: '01', name: 'Specify', text: 'Claude writes the spec, the tests and the shell.' },
-  { n: '02', name: 'Implement', text: 'Eight Qwen workers each build one tool, in parallel.' },
+  { n: '02', name: 'Implement', text: 'Qwen workers each build one tool, in parallel.' },
   { n: '03', name: 'Verify', text: 'Tests and lint run; failures go back to the worker.' },
   { n: '04', name: 'Review', text: 'Claude checks the result in a real browser.' },
 ]
@@ -35,13 +34,6 @@ export default function Home() {
   const [query, setQuery] = useState('')
   const inputRef = useRef(null)
 
-  const q = query.trim().toLowerCase()
-  const matches = q
-    ? tools.filter((t) =>
-        `${t.name} ${t.description} ${t.id}`.toLowerCase().includes(q),
-      )
-    : tools
-
   // "/" focuses the jump box from anywhere on the page
   useEffect(() => {
     function onKey(e) {
@@ -57,7 +49,8 @@ export default function Home() {
 
   function onSubmit(e) {
     e.preventDefault()
-    if (matches.length > 0) window.location.hash = `#/${matches[0].id}`
+    const first = matchTools(query)[0]
+    if (first) window.location.hash = `#/${first.id}`
   }
 
   function onKeyDown(e) {
@@ -70,14 +63,16 @@ export default function Home() {
       <main id="main" tabIndex={-1}>
         <section className="hero">
           <div className="hero-inner">
-            <p className="eyebrow hero-eyebrow">TwigKit · Nine small tools · Zero uploads</p>
+            <p className="eyebrow hero-eyebrow">
+              TwigKit · {tools.length} small tools · Zero uploads
+            </p>
             <h1 className="hero-title">
               Tiny tools,
               <br />
               <em>done beautifully.</em>
             </h1>
             <p className="hero-lead">
-              Format JSON, decode Base64, convert a timestamp, diff two texts. Each one is a
+              Format JSON, decode a token, read a cron line, diff two texts. Each one is a
               20-second job, and each one runs entirely in this tab. Nothing is uploaded,
               nothing is stored, nobody is asked to sign in.
             </p>
@@ -96,7 +91,7 @@ export default function Home() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={onKeyDown}
-                placeholder="Jump to a tool — try “json” or “uuid”"
+                placeholder="Jump to a tool — try “json” or “cron”"
                 autoComplete="off"
                 spellCheck="false"
               />
@@ -118,59 +113,22 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="collection" aria-labelledby="collection-title">
-          <div className="section-head">
-            <div>
-              <p className="eyebrow">The collection</p>
-              <h2 className="section-title" id="collection-title">
-                Pick a tool.
-              </h2>
-            </div>
-            <p className="section-count" aria-live="polite">
-              {q ? `${pad(matches.length)} of ` : ''}
-              {pad(tools.length)}
-            </p>
-          </div>
-          {matches.length > 0 ? (
-            <ul className="cards">
-              {matches.map((t) => {
-                const i = tools.indexOf(t)
-                return (
-                  <li key={t.id}>
-                    <a className="card" href={`#/${t.id}`}>
-                      <div className="card-top">
-                        <ToolTile glyph={t.icon} size="md" />
-                        <span className="card-num">No. {num(i)}</span>
-                      </div>
-                      <h3 className="card-name">{t.name}</h3>
-                      <p className="card-desc">{t.description}</p>
-                      <span className="card-cta">
-                        Open <Arrow />
-                      </span>
-                    </a>
-                  </li>
-                )
-              })}
-            </ul>
-          ) : (
-            <p className="collection-empty">
-              No tool matches “{query.trim()}”.{' '}
-              <a href="#/about">Build your own</a>
-            </p>
-          )}
-        </section>
+        <Collection query={query} />
+
+        <NotebookTeaser />
 
         <section className="teaser" aria-labelledby="teaser-title">
           <div className="teaser-inner">
             <div>
               <p className="eyebrow">How it's built</p>
               <h2 className="teaser-title" id="teaser-title">
-                Architected by Claude. Typed by Qwen. Checked by 89 tests.
+                Architected by Claude. Typed by Qwen. Checked by tests.
               </h2>
               <p className="teaser-text">
                 TwigKit is also a demonstration: one strong model writes the specs and the
-                tests, eight small local models implement the tools in parallel, and nothing
-                ships until the tests say so.
+                tests, small local models implement the tools in parallel, and nothing
+                ships until the tests say so. {WORKER_TOOLS.length} of the {tools.length}{' '}
+                tools here were typed by a worker; so were the articles.
               </p>
               <a className="teaser-link" href="#/about">
                 Read how it's built <Arrow />

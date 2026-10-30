@@ -5,5 +5,6 @@ export default {
   name: "Cron Explainer",
   description: "Read a cron expression in plain English and see the next runs.",
   icon: "*/",
+  category: 'numbers',
   component: lazy(() => import('./Tool.jsx')),
 }

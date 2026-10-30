@@ -1,85 +1,35 @@
 ---
 files:
   - src/pages/About.jsx
-  - src/pages/FlowDiagram.jsx
   - src/pages/About.css
 ---
 
 # 05 — "How it's built" page
 
-You own the About page (route `#/about`): a hero, four key figures, a visual diagram of
-the build loop, a four-part story, a "build your own tool" section with three commands,
-and the footer slot.
+> Changed in v1.1: figures and copy derive every count from the registries; the story has
+> six entries and covers the redesign and the second build; `FlowDiagram` moved to
+> package 14 (it is imported here, not written here); a short "write an article" note
+> joins the "build your own" section.
 
-Other packages provide `SiteHeader` and `Footer` (`src/ui/chrome/*.jsx`), global tokens
-and base styles. `src/ui/CopyButton.jsx` already exists: `<CopyButton text="..." />`
-renders `<button class="btn">Copy</button>`.
+You own the About page (route `#/about`): a hero, four key figures, the build-loop
+diagram (rendered from another package), a six-part story, a "build your own" section
+with three commands, and the footer slot.
 
-Visual idea: warm paper, a serif headline, one green accent ("moss"), hairlines. The
-diagram is pure HTML/CSS plus one small inline SVG: four stations on a continuous 2px
-rule with numbered green dots, which becomes a vertical timeline on phones.
+Other packages provide `SiteHeader`, `Footer` (`src/ui/chrome/*.jsx`), `FlowDiagram`
+(`src/pages/FlowDiagram.jsx`), `src/catalog.js` (`WORKER_TOOLS`), the articles registry
+(`src/articles/registry.js`, exports `articles`) and global tokens and base styles.
+`src/registry.js` exports `tools`. `src/ui/CopyButton.jsx` already exists:
+`<CopyButton text="..." />` renders `<button class="btn">Copy</button>`.
 
-## File 1: `src/pages/FlowDiagram.jsx`
+Visual idea: warm paper, a serif headline, one green accent ("moss"), hairlines.
+**Never write a count or a timing as a literal**; every number on this page is computed.
 
-```jsx
-import './About.css'
-
-const WORKERS = ['json', 'base64', 'timestamp', 'color', 'uuid', 'diff', 'regex', 'stats']
-
-export default function FlowDiagram() {
-  return (
-    <figure className="flow">
-      <ol className="flow-steps">
-        <li className="flow-step">
-          <span className="flow-num" aria-hidden="true">1</span>
-          <span className="flow-who">Claude</span>
-          <h3 className="flow-title">Architect writes specs and tests</h3>
-          <p className="flow-text">The shell, the shared UI, one spec and one test file per tool.</p>
-        </li>
-        <li className="flow-step">
-          <span className="flow-num" aria-hidden="true">2</span>
-          <span className="flow-who">Qwen × 8</span>
-          <h3 className="flow-title">Workers implement in parallel</h3>
-          <p className="flow-text">Each worker gets one spec and returns logic.js and Tool.jsx.</p>
-          <ul className="flow-workers" aria-label="Eight workers, one tool each">
-            {WORKERS.map((w) => (
-              <li key={w}>{w}</li>
-            ))}
-          </ul>
-        </li>
-        <li className="flow-step">
-          <span className="flow-num" aria-hidden="true">3</span>
-          <span className="flow-who">vitest + oxlint</span>
-          <h3 className="flow-title">Tests and lint verify</h3>
-          <p className="flow-text">89 tests and a lint pass, about 14 seconds for the whole set.</p>
-        </li>
-        <li className="flow-step">
-          <span className="flow-num" aria-hidden="true">4</span>
-          <span className="flow-who">Claude</span>
-          <h3 className="flow-title">Architect reviews in a browser</h3>
-          <p className="flow-text">Passing tests is necessary, not sufficient.</p>
-        </li>
-      </ol>
-      <figcaption className="flow-loop">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M4 12a8 8 0 0 1 13.7-5.7L20 8.5" />
-          <path d="M20 4v4.5h-4.5" />
-          <path d="M20 12a8 8 0 0 1-13.7 5.7L4 15.5" />
-          <path d="M4 20v-4.5h4.5" />
-        </svg>
-        <span>
-          A failing test or lint error goes straight back to the worker that wrote it, up to
-          three attempts, before anything reaches review.
-        </span>
-      </figcaption>
-    </figure>
-  )
-}
-```
-
-## File 2: `src/pages/About.jsx`
+## File 1: `src/pages/About.jsx`
 
 ```jsx
+import { tools } from '../registry.js'
+import { WORKER_TOOLS } from '../catalog.js'
+import { articles } from '../articles/registry.js'
 import SiteHeader from '../ui/chrome/SiteHeader.jsx'
 import Footer from '../ui/chrome/Footer.jsx'
 import CopyButton from '../ui/CopyButton.jsx'
@@ -87,13 +37,6 @@ import FlowDiagram from './FlowDiagram.jsx'
 import './About.css'
 
 const REPO_URL = 'https://github.com/codetwigdev/twigkit'
-
-const FIGURES = [
-  { value: '8', label: 'tools built by workers' },
-  { value: '89', label: 'tests, all passing' },
-  { value: '~14 s', label: 'for a full parallel run' },
-  { value: '0', label: 'bytes uploaded, ever' },
-]
 
 const COMMANDS = [
   {
@@ -116,6 +59,13 @@ function Arrow() {
 }
 
 export default function About() {
+  const figures = [
+    { value: String(tools.length), label: 'tools in the kit' },
+    { value: String(WORKER_TOOLS.length), label: 'of them typed by Qwen workers' },
+    { value: String(articles.length), label: 'articles, written the same way' },
+    { value: '0', label: 'bytes uploaded, ever' },
+  ]
+
   return (
     <div className="about">
       <SiteHeader current="about" />
@@ -123,7 +73,7 @@ export default function About() {
         <section className="about-hero">
           <div className="about-hero-inner">
             <p className="eyebrow">How it's built</p>
-            <h1 className="about-title">One architect, eight workers, and a test suite between them.</h1>
+            <h1 className="about-title">One architect, a team of workers, and a test suite between them.</h1>
             <p className="about-lead">
               TwigKit is a free test project. A strong model (Claude) designs the structure
               and writes the contracts; a cheaper local model (Qwen) does the bulk typing, in
@@ -135,7 +85,7 @@ export default function About() {
 
         <section className="about-section" aria-label="Key figures">
           <ul className="figures">
-            {FIGURES.map((f) => (
+            {figures.map((f) => (
               <li key={f.label} className="figure">
                 <b>{f.value}</b>
                 <span>{f.label}</span>
@@ -167,7 +117,7 @@ export default function About() {
               </p>
             </li>
             <li className="story-item">
-              <h3>Eight workers type in parallel</h3>
+              <h3>Workers type in parallel</h3>
               <p>
                 Each Qwen worker, running against a local vLLM server, receives one spec and
                 one test file and returns two files: <code>logic.js</code> (pure functions)
@@ -177,9 +127,9 @@ export default function About() {
             <li className="story-item">
               <h3>The loop verifies</h3>
               <p>
-                <code>scripts/dispatch.mjs</code> writes the files, runs that tool's tests and
-                lint, and feeds any failure back to the worker for another attempt, up to
-                three.
+                <code>scripts/dispatch.mjs</code> and <code>scripts/team.mjs</code> write the
+                files, run the tests, build and lint, and send any failure back to the worker
+                that wrote it for another attempt, before anything reaches review.
               </p>
             </li>
             <li className="story-item">
@@ -188,6 +138,23 @@ export default function About() {
                 Passing tests is necessary, not sufficient. The first pass shipped three
                 tools that showed an error before you typed anything, which no test caught.
                 The fix went into the worker guide, and those tools were re-dispatched.
+              </p>
+            </li>
+            <li className="story-item">
+              <h3>The site gets a design</h3>
+              <p>
+                The first version looked like a default template. A designer model wrote a
+                design document and split it into work packages, one file set each; a team
+                of Qwen workers built the packages in parallel, and the architect reviewed
+                the result in a browser. This page is one of those packages.
+              </p>
+            </li>
+            <li className="story-item">
+              <h3>The kit grows</h3>
+              <p>
+                New tools and the articles were added the same way: scaffold a folder, write
+                the spec and the tests, dispatch a worker, let the tests decide. Nothing
+                about the method changed; only the number of folders did.
               </p>
             </li>
           </ol>
@@ -218,6 +185,10 @@ export default function About() {
           <p className="build-note">
             dispatch talks to any OpenAI-compatible endpoint: vLLM, Ollama, LM Studio.
           </p>
+          <p className="build-note">
+            Articles work the same way: a module under <code>src/articles/</code> with a
+            default export is an article. See <a href="#/articles">the notebook</a>.
+          </p>
           <a className="build-link" href={REPO_URL}>
             Read the worker guide and the specs on GitHub <Arrow />
           </a>
@@ -229,7 +200,7 @@ export default function About() {
 }
 ```
 
-## File 3: `src/pages/About.css`
+## File 2: `src/pages/About.css`
 
 Write exactly:
 
@@ -256,7 +227,7 @@ Write exactly:
   font-size: clamp(34px, 5vw, 60px);
   line-height: 1.05;
   letter-spacing: -0.02em;
-  max-width: 18ch;
+  max-width: 20ch;
   margin: 0 0 20px;
 }
 .about-lead {
@@ -318,93 +289,6 @@ Write exactly:
 .figure span {
   font-size: 13px;
   color: var(--muted);
-}
-
-/* ----- flow diagram ----- */
-.flow {
-  margin: 0;
-}
-.flow-steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-}
-.flow-step {
-  position: relative;
-  padding: 24px 24px 0 0;
-  border-top: 2px solid var(--line-strong);
-}
-.flow-num {
-  position: absolute;
-  top: -15px;
-  left: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--moss);
-  color: var(--on-moss);
-  font: 600 12px/28px var(--font-mono);
-  text-align: center;
-}
-.flow-who {
-  display: inline-block;
-  margin: 0 0 8px;
-  font: 500 11px/1 var(--font-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--moss);
-}
-.flow-title {
-  font-size: 19px;
-  line-height: 1.2;
-  margin: 0 0 6px;
-}
-.flow-text {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--ink-2);
-}
-.flow-workers {
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-}
-.flow-workers li {
-  padding: 6px 2px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-1);
-  background: var(--well);
-  color: var(--ink-2);
-  font: 500 10px/1 var(--font-mono);
-  letter-spacing: 0.04em;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.flow-loop {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 28px 0 0;
-  padding: 14px 16px;
-  border: 1px dashed var(--line-strong);
-  border-radius: var(--r-2);
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--ink-2);
-}
-.flow-loop svg {
-  flex: 0 0 18px;
-  margin-top: 2px;
-  color: var(--moss);
 }
 
 /* ----- story ----- */
@@ -510,14 +394,17 @@ Write exactly:
   font-size: 12px;
 }
 .build-note {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   font-size: 14px;
+  line-height: 1.5;
   color: var(--muted);
+  max-width: 62ch;
 }
 .build-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  margin-top: 8px;
   font-size: 15px;
   font-weight: 500;
   color: var(--moss-ink);
@@ -534,25 +421,6 @@ Write exactly:
 @media (max-width: 899px) {
   .figures {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .flow-steps {
-    grid-template-columns: 1fr;
-  }
-  .flow-step {
-    margin-left: 14px;
-    padding: 0 0 28px 28px;
-    border-top: 0;
-    border-left: 2px solid var(--line-strong);
-  }
-  .flow-step:last-child {
-    padding-bottom: 4px;
-  }
-  .flow-num {
-    top: -2px;
-    left: -15px;
-  }
-  .flow-workers {
-    max-width: 360px;
   }
 }
 @media (max-width: 699px) {
@@ -588,19 +456,22 @@ Write exactly:
 ## How to tell it is right
 
 - `#/about` at 1280px: header with "How it's built" underlined green; a hero on faintly
-  ruled paper: green "HOW IT'S BUILT", serif headline "One architect, eight workers, and
-  a test suite between them.", grey lead.
-- Four figure cards in a row: big serif "8", "89", "~14 s", "0" with small grey labels.
-- "THE LOOP / From spec to shipped tool": four columns sharing one continuous 2px line
-  along the top with green numbered dots 1–4 sitting on it; column 2 contains a 4×2 grid
-  of tiny chips `json … stats`; below, a dashed box with a green loop icon and the
-  retry sentence.
-- At 375px the diagram is a vertical timeline: a 2px line on the left, dots on the line,
-  the steps stacked beneath each other with no horizontal scroll.
-- "THE STORY": four numbered (`01`–`04`, green monospace) entries in two columns, one
-  column on phones; `logic.js` etc. render as inline code on a darker beige chip.
+  ruled paper: green "HOW IT'S BUILT", serif headline "One architect, a team of workers,
+  and a test suite between them.", grey lead.
+- Four figure cards in a row: big serif `17`, `16`, the number of article modules (for
+  example `8`, or `0` before the articles are written), `0`; small grey labels `tools in
+  the kit`, `of them typed by Qwen workers`, `articles, written the same way`, `bytes
+  uploaded, ever`. Add a tool folder and the first two numbers go up by one without
+  touching this file.
+- "THE LOOP / From spec to shipped tool": the diagram from package 14.
+- "THE STORY": six numbered (`01`–`06`, green monospace) entries in two columns (three
+  rows), one column on phones; `logic.js` etc. render as inline code on a darker beige
+  chip.
 - "BUILD YOUR OWN": three command blocks with green numbered dots, uppercase labels, a
   green left edge and a Copy button that reads "Copied" for a second after clicking
-  (`npm test` copies exactly `npm test`). On phones the Copy button moves to the bottom
-  right of the block.
+  (`npm test` copies exactly `npm test`); two grey notes below, the second linking "the
+  notebook" to `#/articles`. On phones the Copy button moves to the bottom right of the
+  block.
+- `grep -n "[0-9]" src/pages/About.jsx` shows no count or timing written as a literal
+  (only `'0'` for bytes uploaded, the vLLM port in the command, and `i + 1`).
 - Footer at the bottom. Dark mode shows green-black paper and pale green accents.

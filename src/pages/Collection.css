@@ -1,0 +1,225 @@
+.collection {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 56px 32px 32px;
+}
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 20px;
+}
+.section-head .eyebrow {
+  margin: 0;
+}
+.section-title {
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.1;
+  margin: 8px 0 0;
+}
+.section-count {
+  margin: 0;
+  font: 400 34px/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* ----- filter pills ----- */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 32px;
+}
+.filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  color: var(--ink-2);
+  font: 500 13px/1 var(--font-body);
+  cursor: pointer;
+  transition: background-color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
+}
+.filter:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+.filter.is-active {
+  background: var(--moss);
+  border-color: var(--moss);
+  color: var(--on-moss);
+}
+.filter:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 2px;
+}
+.filter-n {
+  font: 500 11px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.filter.is-active .filter-n {
+  color: var(--on-moss);
+  opacity: 0.8;
+}
+
+/* ----- groups ----- */
+.group + .group {
+  margin-top: 40px;
+}
+.group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.group-name {
+  margin: 0;
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--moss);
+}
+.group-blurb {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.group-count {
+  margin-left: auto;
+  font: 500 11px/1 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* ----- cards ----- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 184px;
+  height: 100%;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  background: var(--panel);
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform var(--t-base) var(--ease-out), border-color var(--t-base) var(--ease-out), box-shadow var(--t-base) var(--ease-out);
+}
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-card);
+}
+.card:hover .tile,
+.card:focus-visible .tile {
+  background: var(--moss);
+  border-color: var(--moss);
+  color: var(--on-moss);
+}
+.card:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 2px;
+}
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.card-num {
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.card-name {
+  font-size: 22px;
+  line-height: 1.15;
+  margin: 6px 0 0;
+}
+.card-desc {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--moss-ink);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
+}
+.card:hover .card-cta,
+.card:focus-visible .card-cta {
+  opacity: 1;
+  transform: none;
+}
+@media (hover: none) {
+  .card-cta {
+    opacity: 1;
+    transform: none;
+  }
+}
+.collection-empty {
+  margin: 0;
+  padding: 40px 20px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-3);
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ----- responsive ----- */
+@media (max-width: 899px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .group-blurb {
+    display: none;
+  }
+}
+@media (max-width: 599px) {
+  .collection {
+    padding: 40px 16px 24px;
+  }
+  .filters {
+    margin-bottom: 24px;
+  }
+  .group + .group {
+    margin-top: 32px;
+  }
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .card {
+    min-height: 0;
+  }
+}

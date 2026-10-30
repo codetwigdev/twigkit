@@ -1,14 +1,8 @@
-import { Suspense, useEffect, useRef } from 'react'
-import { tools } from '../registry.js'
-import Brand from '../ui/chrome/Brand.jsx'
-import ToolTile from '../ui/chrome/ToolTile.jsx'
-import ThemeToggle from '../ui/chrome/ThemeToggle.jsx'
+import { Suspense } from 'react'
+import { categoryOf, numberOf, total } from '../catalog.js'
+import { articlesForTool, readingTime } from '../articles/registry.js'
+import Rail from './Rail.jsx'
 import './Workspace.css'
-
-const REPO_URL = 'https://github.com/codetwigdev/twigkit'
-
-const pad = (n) => String(n).padStart(2, '0')
-const num = (i) => pad(i + 1)
 
 function Arrow() {
   return (
@@ -20,79 +14,16 @@ function Arrow() {
 
 export default function Workspace({ tool }) {
   const Tool = tool.component
-  const index = tools.findIndex((t) => t.id === tool.id)
-  const stripRef = useRef(null)
-
-  // keep the active chip visible in the mobile strip
-  useEffect(() => {
-    const active = stripRef.current?.querySelector('.chip.is-active')
-    if (active && typeof active.scrollIntoView === 'function') {
-      active.scrollIntoView({ inline: 'center', block: 'nearest' })
-    }
-  }, [tool.id])
+  const related = articlesForTool(tool.id)[0]
 
   return (
     <div className="ws">
-      <aside className="rail">
-        <div className="rail-top">
-          <Brand />
-        </div>
-        <p className="eyebrow rail-label">Tools</p>
-        <nav className="rail-nav" aria-label="Tools">
-          <ol className="rail-list">
-            {tools.map((t, i) => (
-              <li key={t.id}>
-                <a
-                  className={t.id === tool.id ? 'rail-item is-active' : 'rail-item'}
-                  href={`#/${t.id}`}
-                  aria-current={t.id === tool.id ? 'page' : undefined}
-                >
-                  <span className="rail-num">{num(i)}</span>
-                  <ToolTile glyph={t.icon} size="sm" />
-                  <span className="rail-name">{t.name}</span>
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
-        <div className="rail-foot">
-          <a className="rail-link" href="#/about">
-            How it's built <Arrow />
-          </a>
-          <a className="rail-link" href={REPO_URL}>
-            Source on GitHub
-          </a>
-          <div className="rail-foot-row">
-            <ThemeToggle />
-            <span className="rail-note">Runs in your browser. Nothing is uploaded.</span>
-          </div>
-        </div>
-      </aside>
-
-      <div className="ws-mobile">
-        <div className="ws-bar">
-          <Brand />
-          <ThemeToggle />
-        </div>
-        <nav className="strip" aria-label="Tools" ref={stripRef}>
-          {tools.map((t) => (
-            <a
-              key={t.id}
-              className={t.id === tool.id ? 'chip is-active' : 'chip'}
-              href={`#/${t.id}`}
-              aria-current={t.id === tool.id ? 'page' : undefined}
-            >
-              <ToolTile glyph={t.icon} size="sm" />
-              {t.name}
-            </a>
-          ))}
-        </nav>
-      </div>
+      <Rail tool={tool} />
 
       <main id="main" tabIndex={-1} className="ws-main">
         <header className="tool-head">
           <p className="eyebrow">
-            Tool {num(index)} of {pad(tools.length)}
+            Tool {numberOf(tool)} of {total} · {categoryOf(tool).name}
           </p>
           <h1 className="tool-title">{tool.name}</h1>
           <p className="tool-desc">{tool.description}</p>
@@ -102,9 +33,20 @@ export default function Workspace({ tool }) {
             <Tool key={tool.id} />
           </Suspense>
         </div>
+        {related && (
+          <aside className="tool-related" aria-label="Related article">
+            <p className="eyebrow">From the notebook</p>
+            <a className="tool-related-link" href={`#/articles/${related.slug}`}>
+              {related.title} <Arrow />
+            </a>
+            <p className="tool-related-meta">
+              {related.summary} <span className="tool-related-time">{readingTime(related)}</span>
+            </p>
+          </aside>
+        )}
         <p className="ws-foot">
           Nothing you type leaves this tab. <a href="#/">All tools</a> ·{' '}
-          <a href="#/about">How it's built</a>
+          <a href="#/articles">Articles</a> · <a href="#/about">How it's built</a>
         </p>
       </main>
     </div>

@@ -5,7 +5,10 @@ files:
 
 # 02 — Shared tool building blocks
 
-You own one file, `src/styles/blocks.css`, which styles every element the nine tool
+> Changed in v1.1: adds `table.kv`, `.list-mono`, `.field > .out` and `ol` rules at the
+> end of the file; everything before "new in v1.1" is unchanged from v1.
+
+You own one file, `src/styles/blocks.css`, which styles every element the seventeen tool
 components render. **You may not edit any tool component**; everything is done through
 these class names and bare element selectors. The tools live under `src/tools/*/Tool.jsx`;
 read two of them (`color`, `random`) to see the markup, but change nothing there.
@@ -38,6 +41,11 @@ Markup facts you are styling against (do not change them):
 - `.swatch` is an empty `div` with an inline background colour.
 - Two tools use bare `<h2>` as section headings; base styles already handle `h2`.
 - Encode/decode buttons carry `aria-pressed="true|false"`.
+- New tools may render a key/value table
+  `<table class="kv"><tbody><tr><th scope="row">host</th><td>example.com</td></tr>…</tbody></table>`
+  (URL parts, JWT claims), a monospace list `<ol class="list-mono"><li>2026-10-30 09:00</li>…</ol>`
+  (cron run times), and several labelled outputs
+  `<div class="field"><span class="label">SHA-256</span><pre class="out">…<button class="btn">Copy</button></pre></div>`.
 
 ## File: `src/styles/blocks.css`
 
@@ -416,6 +424,91 @@ mark {
 .tool-body > .grid-2 > div > h2:first-child {
   margin-top: 0;
 }
+
+/* ---------- new in v1.1 ---------- */
+
+/* an output that sits inside a labelled field (hash digests, number bases) */
+.field > .out {
+  margin: 0;
+}
+
+/* ordered lists in tools read like the unordered ones */
+.tool-body ol {
+  margin: 0 0 16px;
+  padding-left: 24px;
+  font: 13px/1.6 var(--font-mono);
+  color: var(--ink-2);
+}
+
+/* key / value table: URL parts, JWT claims, parsed fields */
+table.kv {
+  width: 100%;
+  margin: 0 0 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  border-spacing: 0;
+  background: var(--well);
+  font: 13px/1.5 var(--font-mono);
+  overflow: hidden;
+}
+table.kv th,
+table.kv td {
+  padding: 7px 12px;
+  vertical-align: top;
+  text-align: left;
+  border-top: 1px solid var(--line);
+}
+table.kv tr:first-child th,
+table.kv tr:first-child td {
+  border-top: 0;
+}
+table.kv th {
+  width: 32%;
+  font: 500 11px/1.6 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+table.kv td {
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+table.kv td:empty::before {
+  content: '—';
+  color: var(--muted);
+}
+
+/* monospace list in a well: cron run times, split lines, generated values */
+.list-mono {
+  margin: 0 0 16px;
+  padding: 10px 14px 10px 40px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--moss);
+  border-radius: var(--r-2);
+  background: var(--well);
+  color: var(--ink);
+  font: 13px/1.6 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.list-mono li {
+  padding: 2px 0;
+  overflow-wrap: anywhere;
+}
+.list-mono li::marker {
+  color: var(--muted);
+}
+.list-mono:empty {
+  display: none;
+}
+
+@media (max-width: 599px) {
+  table.kv th {
+    width: 38%;
+    white-space: normal;
+  }
+}
 ```
 
 ## How to tell it is right
@@ -436,4 +529,8 @@ Open `#/json-formatter`, `#/color`, `#/random`, `#/text-diff`, `#/text-stats`:
 - In Text Diff, added lines are pale green with a green left edge, removed lines pale
   red-clay with a clay edge.
 - An invalid JSON shows a pale clay box with clay text and a 3px clay left edge.
+- Paste this into a scratch page or the console to check the new blocks: a
+  `<table class="kv">` renders as a darker rounded panel with uppercase grey keys in a
+  narrow left column and hairlines between rows; an `<ol class="list-mono">` is a darker
+  panel with a 3px green left edge and grey numbers.
 - Nothing under `src/tools/` or `src/ui/` was modified; `npm test` passes.
