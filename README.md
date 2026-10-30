@@ -1,0 +1,76 @@
+# TwigKit
+
+Tiny developer utilities that run entirely in your browser. No backend, no accounts,
+nothing leaves your machine.
+
+| Tool | What it does |
+| --- | --- |
+| JSON Formatter | Format, validate, minify, sort keys |
+| Base64 / URL | Encode and decode (UTF-8 safe, URL-safe alphabet) |
+| Timestamp | Unix seconds/milliseconds to dates and back |
+| Color Converter | hex, rgb and hsl |
+| UUID / Random | UUID v4 and random strings from `crypto` |
+| Text Diff | Line-by-line diff |
+| Regex Tester | Live match highlighting, capture groups |
+| Text Stats | Counts, reading time, case conversion |
+| Slugify | Title to URL slug |
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm test
+npm run build
+```
+
+## Why this repo exists
+
+TwigKit is a free test project for a **Claude-as-architect, Qwen-as-workers** workflow.
+A strong model designs the structure and the contracts; a cheaper local model does the
+bulk typing, in parallel, and is held to those contracts by tests.
+
+1. **The architect** (Claude) wrote the shell, the shared UI, the tool contract, a
+   reference tool, a spec per tool, and the tests.
+2. **The workers** (Qwen, 8 in parallel against a local vLLM server) each implemented one
+   tool: `logic.js` and `Tool.jsx`.
+3. **The loop** (`scripts/dispatch.mjs`) writes the files, runs that tool's tests and
+   lint, and feeds failures back to the worker for another try.
+4. **The architect reviews** the integrated result in a real browser. Passing tests is
+   necessary, not sufficient: the first pass shipped three tools that showed an error
+   before you typed anything, which no test caught. The fix went into the
+   [worker guide](docs/WORKER_GUIDE.md), then those tools were re-dispatched.
+
+Everything the workers saw is in this repo: [`docs/WORKER_GUIDE.md`](docs/WORKER_GUIDE.md),
+[`docs/specs/`](docs/specs), and each tool's `logic.test.js`.
+
+## Anatomy of a tool
+
+```
+src/tools/<id>/
+  index.js        metadata + lazy component (architect)
+  logic.js        pure functions, no React (worker)
+  logic.test.js   the contract (architect)
+  Tool.jsx        UI wiring only (worker)
+```
+
+Any folder under `src/tools/` with an `index.js` shows up in the sidebar automatically.
+
+## Add your own tool
+
+```bash
+npm run new-tool -- my-tool "My Tool" "What it does." "*" myFunction
+```
+
+That creates the stubs. Write `logic.test.js` first, then fill in `logic.js` and
+`Tool.jsx` yourself, or write `docs/specs/my-tool.md` and let a model do it:
+
+```bash
+QWEN_URL=http://localhost:8000/v1 QWEN_MODEL=your-model npm run dispatch -- my-tool
+```
+
+`dispatch` talks to any OpenAI-compatible endpoint (vLLM, Ollama, LM Studio...).
+Defaults: `QWEN_URL=http://localhost:8000/v1`, `QWEN_MODEL=Qwen3.8`, `WORKERS=8`,
+`ATTEMPTS=3`.
+
+## License
+
+MIT
