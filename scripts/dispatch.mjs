@@ -70,9 +70,11 @@ async function chat(messages) {
 
 function parseFiles(reply) {
   const files = {}
-  const re = /###\s*FILE:\s*([\w.]+)\s*\n```[\w]*\n([\s\S]*?)\n```/g
+  // Accepts "File: src/tools/<id>/logic.js" and the older "### FILE: logic.js"; matched by file name.
+  const re = /^(?:#{1,6}\s*)?FILE:\s*`?([\w./-]+?)`?\s*\n+```[\w]*\n([\s\S]*?)\n```/gim
   for (const m of reply.matchAll(re)) {
-    if (ALLOWED.includes(m[1])) files[m[1]] = m[2] + '\n'
+    const name = m[1].split('/').pop()
+    if (ALLOWED.includes(name)) files[name] = m[2] + '\n'
   }
   return files
 }

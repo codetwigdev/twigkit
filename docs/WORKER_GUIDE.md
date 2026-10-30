@@ -40,14 +40,15 @@ Do not edit tests, `index.js`, or anything outside your folder.
 
 ## Output format
 
-Reply with the two files, each in this exact form, and nothing else of importance:
+Reply with a summary of at most 5 lines, then the two files, each in this exact form
+(the path is the full path from the repo root):
 
-### FILE: logic.js
+File: src/tools/<id>/logic.js
 ```js
 // full file contents
 ```
 
-### FILE: Tool.jsx
+File: src/tools/<id>/Tool.jsx
 ```jsx
 // full file contents
 ```

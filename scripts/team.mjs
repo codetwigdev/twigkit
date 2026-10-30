@@ -43,7 +43,7 @@ const CONTRACTS = `${WORK_DIR}/00-contracts.md`
 const args = process.argv.slice(2)
 const notesIdx = args.indexOf('--notes')
 const notes = notesIdx >= 0 ? readFileSync(args[notesIdx + 1], 'utf8') : ''
-const wanted = args.filter((a, i) => i !== notesIdx && i !== notesIdx + 1)
+const wanted = args.filter((a, i) => notesIdx < 0 || (i !== notesIdx && i !== notesIdx + 1))
 
 const norm = (s) => s.replace(/\r\n/g, '\n')
 const read = (p) => norm(readFileSync(p, 'utf8'))
@@ -57,9 +57,17 @@ function loadPackages() {
       const text = read(join(WORK_DIR, f))
       const m = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
       if (!m) throw new Error(`${f}: missing front matter`)
-      const files = [...m[1].matchAll(/^\s*-\s+(\S+)\s*$/gm)].map((x) => x[1])
-      if (!files.length) throw new Error(`${f}: no files listed`)
-      return { name: f.replace(/\.md$/, ''), files, body: m[2].trim() }
+      // Tiny front-matter reader: `files:` and optional `shared:` followed by `- path` items.
+      const lists = { files: [], shared: [] }
+      let key = null
+      for (const line of m[1].split('\n')) {
+        const k = line.match(/^(\w+):\s*$/)
+        const item = line.match(/^\s*-\s+(\S+)\s*$/)
+        if (k) key = k[1]
+        else if (item && lists[key]) lists[key].push(item[1])
+      }
+      if (!lists.files.length) throw new Error(`${f}: no files listed`)
+      return { name: f.replace(/\.md$/, ''), files: lists.files, shared: lists.shared, body: m[2].trim() }
     })
 }
 
@@ -112,7 +120,7 @@ async function viaAskQwen(p, errors) {
   writeFileSync(taskFile, taskText(p, errors))
   // The task file and current owned files must be on the remote before ask-qwen reads them.
   await syncUp()
-  const shared = [GUIDE, existsSync(CONTRACTS) && CONTRACTS].filter(Boolean)
+  const shared = [GUIDE, existsSync(CONTRACTS) && CONTRACTS, ...p.shared].filter(Boolean)
   const files = existingOwned(p)
   const cmd = [
     `cd ${REMOTE_DIR} &&`,
@@ -132,9 +140,13 @@ async function viaApi(p, errors) {
   const files = existingOwned(p)
     .map((f) => `### CURRENT ${f}\n\`\`\`${langOf(f)}\n${read(f).trimEnd()}\n\`\`\``)
     .join('\n\n')
+  const sharedFiles = p.shared
+    .map((f) => `### ${f}\n\`\`\`${langOf(f)}\n${read(f).trimEnd()}\n\`\`\``)
+    .join('\n\n')
   const prompt = [
     read(GUIDE),
     existsSync(CONTRACTS) && `# Shared contracts\n\n${read(CONTRACTS)}`,
+    sharedFiles && `# Shared context files\n\n${sharedFiles}`,
     files && `# Current state of your files\n\n${files}`,
     taskText(p, errors),
   ]
@@ -250,7 +262,14 @@ for (let round = 0; round <= ROUNDS; round++) {
     break
   }
   const all = failures.map((f) => `## ${f.label}\n${f.out.slice(-5000)}`).join('\n\n')
-  const blamed = pkgs.filter((p) => p.files.some((f) => all.includes(f)))
+  let blamed = pkgs.filter((p) => p.files.some((f) => all.includes(f)))
+  if (!blamed.length) {
+    // A failing test file (e.g. logic.test.js) does not name the implementation file;
+    // fall back to packages whose files live in the same folder as a mentioned path.
+    const dirs = (p) => [...new Set(p.files.map((f) => `${dirname(f).replace(/\\/g, '/')}/`))]
+    const failing = (d) => new RegExp(`FAIL\\s+${d.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}`).test(all)
+    blamed = pkgs.filter((p) => dirs(p).some((d) => d.startsWith('src/tools/') && failing(d)))
+  }
   console.log(`Failed: ${failures.map((f) => f.label).join(', ')}. Blamed: ${blamed.map((p) => p.name).join(', ') || 'nobody (needs the PM)'}`)
   if (round === ROUNDS || !blamed.length) break
   await pool(blamed, WORKERS, (p) => attempt(p, all, `fix round ${round + 1}`))
