@@ -42,6 +42,25 @@ bulk typing, in parallel, and is held to those contracts by tests.
 Everything the workers saw is in this repo: [`docs/WORKER_GUIDE.md`](docs/WORKER_GUIDE.md),
 [`docs/specs/`](docs/specs), and each tool's `logic.test.js`.
 
+### The redesign: a project-manager round
+
+The site you are looking at (the "Field notes" look, the home page, the workspace shell
+and the About page) was made with a second pass of the same idea, with the architect
+acting as **project manager**:
+
+1. The PM wrote a [design brief](docs/design/BRIEF.md) with hard constraints: no new
+   dependencies, no external requests, and the nine tool components untouched.
+2. A top-tier model (Claude Fable 5.1) was commissioned as **lead designer**. It wrote the
+   [design spec](docs/design/DESIGN.md) and seven self-contained
+   [work packages](docs/design/work), each owning its own files, plus a shared contracts
+   file.
+3. Seven Qwen workers built the packages in parallel (about 40 seconds for all of them).
+   `scripts/team.mjs` runs them, then verifies the whole project (build, tests, lint) and
+   sends failures back to the worker whose files they mention.
+4. The PM reviewed the result in a browser at desktop, dark and phone widths, and sent
+   revision notes. One lesson is written into the [team guide](docs/TEAM_GUIDE.md):
+   packages are the baseline each round, so revision notes must be cumulative.
+
 ## Anatomy of a tool
 
 ```
@@ -70,6 +89,21 @@ QWEN_URL=http://localhost:8000/v1 QWEN_MODEL=your-model npm run dispatch -- my-t
 `dispatch` talks to any OpenAI-compatible endpoint (vLLM, Ollama, LM Studio...).
 Defaults: `QWEN_URL=http://localhost:8000/v1`, `QWEN_MODEL=Qwen3.8`, `WORKERS=8`,
 `ATTEMPTS=3`.
+
+## Build pages with a team
+
+For larger work than a single tool, write work packages in `docs/design/work/` (each a
+Markdown file with a `files:` front matter listing the files it owns) and run them:
+
+```bash
+npm run team                       # every package
+npm run team -- 04 05              # only packages starting with 04 and 05
+npm run team -- 05 --notes n.md    # revision round (notes must be cumulative)
+```
+
+`team` uses the same endpoint settings as `dispatch`. Set `ASK_QWEN_HOST=<ssh-host>` to
+sync the repo to a machine that has an `ask-qwen` command and run the workers there
+instead. Packages must not share files; the runner refuses to start if two do.
 
 ## License
 
