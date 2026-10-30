@@ -231,7 +231,7 @@ Fonts `--font-display`, `--font-body`, `--font-mono`. Radii `--r-1` 3px, `--r-2`
 `--r-3` 10px, `--r-pill` 999px. Shadows `--shadow-card`, `--shadow-sheet`.
 Motion `--t-fast` 120ms, `--t-base` 180ms, `--t-slow` 320ms, `--ease-out`, `--ease-in-out`.
 Layout `--rail-w` 248px, `--content-max` 880px, `--page-max` 1120px. The reading
-measure for articles is a literal `680px` in the article CSS.
+measure for articles is a literal `760px` in the article CSS.
 
 Global helper classes from `base.css`: `.muted`, `.eyebrow` (mono uppercase label),
 `.visually-hidden`, `.skip-link`.

@@ -149,7 +149,7 @@ Write exactly:
   outline: none;
 }
 .art-inner {
-  max-width: calc(680px + 64px);
+  max-width: calc(760px + 64px);
   margin: 0 auto;
   padding: 40px 32px 72px;
 }
@@ -217,7 +217,7 @@ Write exactly:
 
 /* ----- body ----- */
 .art-body {
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.65;
   color: var(--ink);
 }
@@ -460,8 +460,8 @@ Write exactly:
 - With at least one article module present, `#/articles/<slug>` shows: the site header
   with "Articles" underlined green; a small grey "← All articles" link; a green uppercase
   meta line `30 OCT 2026 · 4 MIN READ`; a large serif title; a grey lead sentence; small
-  monospace tag pills; a hairline; then the body in a column at most 680px wide with
-  17px text, serif headings, dark-beige inline code, code blocks in a well with a
+  monospace tag pills; a hairline; then the body in a column at most 760px wide with
+  18px text, serif headings, dark-beige inline code, code blocks in a well with a
   language label and a `Copy` button in a header strip, a serif italic block quote with a
   `— Someone` line, and a pale green callout with a green left edge and an uppercase
   title.

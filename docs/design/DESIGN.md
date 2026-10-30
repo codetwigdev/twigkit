@@ -95,7 +95,7 @@ moss 6.4:1; clay on clay-soft 5.6:1; ink on marker 13:1; moss-ink on moss-soft (
 title) 7.6:1; ink on moss-soft 12:1. Dark: ink on paper 14:1; muted on paper 6.6:1, on
 well 6.4:1; moss on paper 9.5:1; on-moss on moss 9:1; clay on clay-soft 6.7:1; ink on
 marker 5.4:1; moss-ink on moss-soft 8.9:1. Focus ring (moss) against paper 6.4:1 light,
-9.5:1 dark. The reading measure is a literal `680px`; no new tokens were added.
+9.5:1 dark. The reading measure is a literal `760px`; no new tokens were added.
 
 ### Type scale
 
@@ -521,7 +521,7 @@ rendered without any HTML injection. Read them on GitHub.`
 │              What Base64 is for, why it makes data bigger, …   (20px ink-2)  │
 │              (encoding)(security)                              tag pills     │
 │              ─────────────────────────────────────────────── hairline        │
-│              Body text, 17px/1.65, column 680px wide. Inline `code` on a     │
+│              Body text, 18px/1.65, column 760px wide. Inline `code` on a     │
 │              darker chip, **bold** 600, links moss-ink with a hairline       │
 │              underline.                                                      │
 │              What Base64 is for                                (26px serif)  │
@@ -569,7 +569,7 @@ Document title `{title} · TwigKit`.
 
 | Part | Values |
 | --- | --- |
-| `.art-inner` | max `calc(680px + 64px)`, centred, padding 40px 32px 72px (24px 16px 56px phone) |
+| `.art-inner` | max `calc(760px + 64px)`, centred, padding 40px 32px 72px (24px 16px 56px phone) |
 | `.art-back` | 13px `--ink-2`, hover moss-ink, arrow nudges -2px; margin-bottom 32px |
 | `.art-head` | margin-bottom 36px, padding-bottom 28px, hairline; `.art-meta` eyebrow in moss; title `clamp(32px, 4.5vw, 48px)`/1.1 tracking -0.02em; summary `clamp(17px, 1.6vw, 20px)`/1.5 `--ink-2`; tags margin-top 20px |
 | `.art-body` | 17px/1.65 ink (16px phone); `p` margin 0 0 20px; `h2` 26px/1.2 margin 44px 0 12px (23px, 36px top on phone); `h3` 20px/1.25 margin 32px 0 8px; first heading margin-top 0; lists padding-left 24px, `li` margin 6px, markers muted; links moss-ink with `--line-strong` underline; `strong` 600; inline `code` 0.88em on `--well`, radius 3px, padding 1px 5px |
