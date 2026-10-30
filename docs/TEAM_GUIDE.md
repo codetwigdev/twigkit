@@ -6,8 +6,8 @@ designer wrote it so that you do not have to make taste decisions: follow it exa
 
 ## Rules
 
-- You may only create or change the files listed under `files:` in your package. Any
-  file you output that is not on that list is thrown away.
+- You may only create or change the files listed as owned in your package. Any file you
+  output that is not on that list is thrown away.
 - Always output each owned file **in full**. Never output diffs, fragments, or
   "unchanged" placeholders.
 - Use the exact values, copy text, class names, component names and import paths in your
@@ -23,11 +23,6 @@ designer wrote it so that you do not have to make taste decisions: follow it exa
 
 ## Output format
 
-For each owned file:
-
-### FILE: path/relative/to/repo/root.ext
-```css
-full file contents
-```
-
-Use the right language tag (`css`, `jsx`, `js`). Output nothing else that matters.
+Start with a summary of at most 5 lines. Then, for each owned file, a line
+`File: <path relative to repo root>` followed by the complete file in one fenced code
+block (language tag `css`, `jsx` or `js`). Output nothing else that matters.
