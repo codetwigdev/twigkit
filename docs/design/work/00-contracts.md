@@ -80,7 +80,7 @@ Because hashes are routes, **never** use `href="#section"` for in-page anchors.
 | `ThemeToggle` | `ui/chrome/ThemeToggle.jsx` | `<button type="button" class="theme-toggle">` with the current mode's icon. Props: none. |
 | `SiteHeader` | `ui/chrome/SiteHeader.jsx` | `<header class="site-header">` with Brand, nav links `Tools` (`#/`) and `How it's built` (`#/about`), and ThemeToggle. Props: `current` = `'home' \| 'about'` (sets `aria-current="page"` on the matching link). |
 | `Footer` | `ui/chrome/Footer.jsx` | `<footer class="site-footer">`. Props: none. |
-| `Workspace` | `shell/Workspace.jsx` | The whole tool page (rail, title, tool, footer). Props: `tool` (registry item). |
+| `Workspace` | `shell/Workspace.jsx` | The whole tool page (rail, title, tool, footer). Props: `tool` (registry item). Renders the tool inside `<div class="tool-body">`, which `blocks.css` uses to scope in-tool prose rules. |
 | `Home` | `pages/Home.jsx` | The whole home page incl. SiteHeader and Footer. Props: none. |
 | `About` | `pages/About.jsx` | The whole about page incl. SiteHeader and Footer. Props: none. |
 | `FlowDiagram` | `pages/FlowDiagram.jsx` | The build-flow diagram (HTML/CSS + inline SVG). Props: none. |
@@ -94,8 +94,14 @@ Document titles (set by App): home `TwigKit — Tiny tools, done beautifully`; a
 
 ## 6. Constants
 
-- `REPO_URL = 'https://github.com/CodeTwig/twigkit'` (used by Footer and About; a single
-  string literal in each file that needs it).
+- `REPO_URL = 'https://github.com/CodeTwig/twigkit'` (used by Footer, About and
+  Workspace; a single string literal in each file that needs it). The project manager
+  confirms the real URL before the packages run; change it in those three files only.
+- Index numbers: `const pad = (n) => String(n).padStart(2, '0')` and
+  `const num = (i) => pad(i + 1)`; a tool's number is `num(tools.indexOf(tool))`, the
+  total is `pad(tools.length)`.
+- Text the tests look for: Home `<h1>` contains `Tiny tools`; About `<h1>` contains
+  `One architect`; a tool page's `<h1>` is exactly the tool's `name`.
 - Footer copy and links are defined in package 06 only.
 
 ## 7. Design tokens (names). Values live in `src/styles/tokens.css` (package 01)

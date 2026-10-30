@@ -110,7 +110,8 @@ import './Workspace.css'
 
 const REPO_URL = 'https://github.com/CodeTwig/twigkit'
 
-const num = (i) => String(i + 1).padStart(2, '0')
+const pad = (n) => String(n).padStart(2, '0')
+const num = (i) => pad(i + 1)
 
 function Arrow() {
   return (
@@ -194,7 +195,7 @@ export default function Workspace({ tool }) {
       <main id="main" tabIndex={-1} className="ws-main">
         <header className="tool-head">
           <p className="eyebrow">
-            Tool {num(index)} of {num(tools.length - 1)}
+            Tool {num(index)} of {pad(tools.length)}
           </p>
           <h1 className="tool-title">{tool.name}</h1>
           <p className="tool-desc">{tool.description}</p>
@@ -214,8 +215,8 @@ export default function Workspace({ tool }) {
 }
 ```
 
-Note the eyebrow reads `Tool 03 of 09` (`num(tools.length - 1)` yields `09` for nine
-tools). The `key={tool.id}` resets tool state when switching tools.
+The eyebrow reads `Tool 03 of 09`. The `key={tool.id}` resets tool state when switching
+tools.
 
 ## File 4: `src/shell/Workspace.css`
 

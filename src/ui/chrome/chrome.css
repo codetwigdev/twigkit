@@ -1,0 +1,195 @@
+/* ----- brand ----- */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.brand-mark {
+  flex: 0 0 24px;
+  color: var(--moss);
+  transition: transform var(--t-base) var(--ease-out);
+}
+.brand:hover .brand-mark {
+  transform: rotate(-10deg);
+}
+.brand-name {
+  font: 500 20px/1 var(--font-display);
+  letter-spacing: -0.01em;
+}
+.brand:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+/* ----- tool tile ----- */
+.tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: var(--well);
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  user-select: none;
+  transition: background-color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
+}
+.tile-sm {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-1);
+  font-size: 11px;
+}
+.tile-md {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-2);
+  font-size: 17px;
+}
+.tile-lg {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-3);
+  font-size: 22px;
+}
+
+/* ----- theme toggle ----- */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--panel);
+  color: var(--ink-2);
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background-color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
+}
+.theme-toggle svg {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+}
+.theme-toggle:hover {
+  border-color: var(--moss);
+  color: var(--moss-ink);
+  background: var(--moss-soft);
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 2px;
+}
+.ws-bar .theme-toggle-label {
+  display: none;
+}
+
+/* ----- site header (Home, About) ----- */
+.site-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.site-header-inner {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  height: 64px;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.site-nav a {
+  padding: 6px 0;
+  border-bottom: 1px solid transparent;
+  font-size: 14px;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out);
+}
+.site-nav a:hover {
+  color: var(--ink);
+}
+.site-nav a[aria-current='page'] {
+  color: var(--ink);
+  border-bottom-color: var(--moss);
+}
+
+/* ----- footer ----- */
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+.site-footer-inner {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 40px 32px 48px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px 48px;
+  align-items: start;
+}
+.site-footer-tag {
+  margin: 10px 0 0;
+  font: italic 400 15px/1.4 var(--font-display);
+  color: var(--muted);
+}
+.site-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding-top: 4px;
+}
+.site-footer-nav a {
+  font-size: 14px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.site-footer-nav a:hover {
+  color: var(--moss-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.site-footer-note {
+  grid-column: 1 / -1;
+  margin: 8px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 64ch;
+}
+
+@media (max-width: 599px) {
+  .site-header-inner {
+    height: 56px;
+    padding: 0 16px;
+  }
+  .site-nav {
+    gap: 14px;
+  }
+  .site-nav a {
+    font-size: 13px;
+  }
+  .site-header .theme-toggle-label {
+    display: none;
+  }
+  .site-footer-inner {
+    grid-template-columns: 1fr;
+    padding: 32px 16px 40px;
+  }
+}

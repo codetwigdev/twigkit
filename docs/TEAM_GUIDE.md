@@ -26,3 +26,10 @@ designer wrote it so that you do not have to make taste decisions: follow it exa
 Start with a summary of at most 5 lines. Then, for each owned file, a line
 `File: <path relative to repo root>` followed by the complete file in one fenced code
 block (language tag `css`, `jsx` or `js`). Output nothing else that matters.
+
+## Revision rounds
+
+The package text is the baseline every time, not the files on disk. Review notes are
+cumulative: the project manager sends every change that should be in the final result,
+not just the newest one. A note that says "change only X" means "baseline plus all listed
+changes", so earlier approved changes must be repeated in the notes.
