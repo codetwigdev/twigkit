@@ -15,7 +15,7 @@
 // to that package's worker in a fresh call (single-shot, no chat history).
 //
 // Two ways to reach Qwen:
-//   ASK_QWEN_HOST=claude-box   sync the repo to that host over ssh and run its `ask-qwen`
+//   ASK_QWEN_HOST=my-host      sync the repo to that host over ssh and run its `ask-qwen`
 //                              command there (the prefix-cache-friendly path; recommended)
 //   (unset)                    call an OpenAI-compatible endpoint directly (QWEN_URL, QWEN_MODEL)
 //

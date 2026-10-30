@@ -94,7 +94,7 @@ Document titles (set by App): home `TwigKit — Tiny tools, done beautifully`; a
 
 ## 6. Constants
 
-- `REPO_URL = 'https://github.com/CodeTwig/twigkit'` (used by Footer, About and
+- `REPO_URL = 'https://github.com/codetwigdev/twigkit'` (used by Footer, About and
   Workspace; a single string literal in each file that needs it). The project manager
   confirms the real URL before the packages run; change it in those three files only.
 - Index numbers: `const pad = (n) => String(n).padStart(2, '0')` and

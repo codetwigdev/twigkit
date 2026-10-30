@@ -207,7 +207,7 @@ export default function SiteHeader({ current }) {
 import Brand from './Brand.jsx'
 import './chrome.css'
 
-const REPO_URL = 'https://github.com/CodeTwig/twigkit'
+const REPO_URL = 'https://github.com/codetwigdev/twigkit'
 
 export default function Footer() {
   return (

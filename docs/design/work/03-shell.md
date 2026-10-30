@@ -108,7 +108,7 @@ import ToolTile from '../ui/chrome/ToolTile.jsx'
 import ThemeToggle from '../ui/chrome/ThemeToggle.jsx'
 import './Workspace.css'
 
-const REPO_URL = 'https://github.com/CodeTwig/twigkit'
+const REPO_URL = 'https://github.com/codetwigdev/twigkit'
 
 const pad = (n) => String(n).padStart(2, '0')
 const num = (i) => pad(i + 1)

@@ -86,7 +86,7 @@ import CopyButton from '../ui/CopyButton.jsx'
 import FlowDiagram from './FlowDiagram.jsx'
 import './About.css'
 
-const REPO_URL = 'https://github.com/CodeTwig/twigkit'
+const REPO_URL = 'https://github.com/codetwigdev/twigkit'
 
 const FIGURES = [
   { value: '8', label: 'tools built by workers' },
