@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "new-tool": "node scripts/new-tool.mjs",
-    "dispatch": "node scripts/dispatch.mjs"
+    "dispatch": "node scripts/dispatch.mjs",
+    "team": "node scripts/team.mjs"
   },
   "dependencies": {
     "react": "^19.3.1",
